@@ -1,12 +1,8 @@
-\section{Per-instance results}\label{app:tables}
-Costs in bold equal the optimum. A superscript t marks a branch-and-bound run stopped by the 300\,s limit; its cost is the best tree
-found. A dash in the DP columns means \(k>20\), which the DP does not attempt. Times are wall-clock seconds for one run.
-\input{generated/appendix_tables.tex}
-
 \section{Reproducing the results}\label{app:repro}
 \begin{verbatim}
 make                              # the five solvers, in build/
 make test                         # heap tests, amortized check
+python3 scripts/fuzz.py           # 300 random graphs, all solvers
 python3 scripts/gen_instances.py  # generated instances
 bash scripts/run_bench.sh         # results/*.csv
 python3 scripts/make_tables.py    # report/generated/*
@@ -14,3 +10,9 @@ make report                       # report/report.pdf
 \end{verbatim}
 Every solver reads a SteinLib \texttt{.stp} file and prints one CSV row; \texttt{--tree=FILE} writes the tree's edges.
 The README in the archive lists all options.
+
+\section{Per-instance results}\label{app:tables}
+Costs in bold equal the optimum. A superscript t marks a branch-and-bound run stopped by the 300\,s limit; its cost is the best tree
+found. A dash in the DP columns means \(k>20\), which the DP does not attempt. Times are wall-clock seconds for one run.
+\input{generated/appendix_tables.tex}
+

@@ -24,6 +24,7 @@ CSV output). Only the C++17 standard library is used.
 
 ```
 make                      # g++ -std=c++17 -O2, binaries in build/
+python3 scripts/fuzz.py   # all solvers on 300 random small graphs
 make test                 # heap tests: 10^6 random operations against std::multiset,
                           # amortized bound asserted after every operation
 ./build/greedy3_zelikovsky instances/steinlib/B/b18.stp --header

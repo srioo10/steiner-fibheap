@@ -6,6 +6,7 @@
 \usepackage{longtable,microtype,graphicx,booktabs,array,float,caption,subcaption,enumitem,xcolor,tikz,pgfplots,pgfplotstable,siunitx,fancyhdr,titlesec}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage[colorlinks=true,linkcolor=accent,citecolor=accent,urlcolor=accent]{hyperref}
+\usepackage{aliascnt}
 \usepackage[nameinlink,capitalise]{cleveref}
 \emergencystretch=2em
 \pgfplotsset{compat=1.18}
@@ -23,8 +24,12 @@
 \fancyhead[L]{\small Steiner trees on Fibonacci heaps}\fancyhead[R]{\small CS23I1006 \& CS23I1002}
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
-\theoremstyle{plain}\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
-\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+% aliascnt gives each environment its own counter name, so cleveref prints Lemma/Corollary, not Theorem
+\theoremstyle{plain}\newtheorem{theorem}{Theorem}[section]
+\newaliascnt{lemma}{theorem}\newtheorem{lemma}[lemma]{Lemma}\aliascntresetthe{lemma}
+\newaliascnt{corollary}{theorem}\newtheorem{corollary}[corollary]{Corollary}\aliascntresetthe{corollary}
+\theoremstyle{definition}\newaliascnt{definition}{theorem}\newtheorem{definition}[definition]{Definition}\aliascntresetthe{definition}
+\crefname{lemma}{Lemma}{Lemmas}\crefname{corollary}{Corollary}{Corollaries}\crefname{definition}{Definition}{Definitions}
 \SetKwProg{Fn}{function}{}{}\SetKwComment{tcp}{\(\triangleright\) }{}
 \SetAlFnt{\small}\SetAlCapFnt{\small}\SetAlCapNameFnt{\small}
 \newcommand{\OPT}{\mathrm{OPT}}

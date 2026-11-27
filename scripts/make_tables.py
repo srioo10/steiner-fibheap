@@ -505,7 +505,7 @@ def time_cell(r):
 
 
 with open(os.path.join(GEN, "appendix_tables.tex"), "w") as f:
-    for s in ["B", "C", "P6E", "Adversarial", "Grid", "Random"]:
+    for s in ["B", "C", "P6E"]:
         ins = sorted([i for i in by if inst_set[i] == s])
         f.write(f"\\subsection*{{Set {s}}}\n\\begingroup\\scriptsize\\setlength{{\\tabcolsep}}{{3.2pt}}\n")
         f.write("\\begin{longtable}{@{}lrrrr" + "rr" * 5 + "@{}}\\toprule\n")
@@ -534,6 +534,21 @@ with open(os.path.join(GEN, "appendix_tables.tex"), "w") as f:
             cells += [str(len(ok)), f"{max(r['time_ms'] for r in ok)/1000:.2f}" if ok else "--"]
         f.write(f"{k} & {len(ins)} & " + " & ".join(cells) + "\\\\\n")
     f.write("\\bottomrule\\end{tabular}\\end{table}\n")
+
+    for s in ["Adversarial", "Random", "Grid"]:
+        ins = sorted([i for i in by if inst_set[i] == s])
+        f.write(f"\\subsection*{{Set {s}}}\n\\begingroup\\scriptsize\\setlength{{\\tabcolsep}}{{3.2pt}}\n")
+        f.write("\\begin{longtable}{@{}lrrrr" + "rr" * 5 + "@{}}\\toprule\n")
+        f.write("Inst. & \\(n\\) & \\(m\\) & \\(k\\) & OPT & \\multicolumn{2}{c}{G1} & \\multicolumn{2}{c}{G2} & \\multicolumn{2}{c}{G3} & \\multicolumn{2}{c}{DP} & \\multicolumn{2}{c}{B\\&B}\\\\\n")
+        f.write(" & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\\\\midrule\\endhead\n")
+        for i in ins:
+            n, m, k, o = info[i]
+            cells = []
+            for a in ALG:
+                r = by[i].get(a)
+                cells += [cost_cell(r), time_cell(r)]
+            f.write(f"{i.replace('_', '\\_')} & {n} & {m} & {k} & {o} & " + " & ".join(cells) + "\\\\\n")
+        f.write("\\bottomrule\\end{longtable}\\endgroup\n")
 
 # ---------------------------------------------------------------- overview table (one row per algorithm)
 with open(os.path.join(GEN, "overview.tex"), "w") as f:

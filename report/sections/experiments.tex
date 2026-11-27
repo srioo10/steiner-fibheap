@@ -17,7 +17,9 @@ which is separate from all solvers: edge ids valid and distinct, no cycle, conne
 the input. No run failed this check. \texttt{scripts/make\_tables.py} also refuses to build the report if any greedy cost is below the
 known optimum, or if an exact solver that claims optimality differs from it. All \val{exact.checked} exact SteinLib results agree with the
 published optima, and on the generated sets the DP and the branch-and-bound, two unrelated algorithms,
-agree with each other.
+agree with each other. Finally, \texttt{scripts/fuzz.py} runs all five solvers on 300 random graphs with up to 14 vertices,
+zero-weight edges, ties and \(k\) from 1 to \(n\); the two exact methods agree on all of them and no greedy tree is invalid or below
+the optimum.
 
 \input{generated/overview.tex}
 

@@ -69,6 +69,15 @@ p631 & 200 & 370 & 20 & 39067 & 42103 & 0.001 & 40429 & 0.011 & 39565 & 0.002 & 
 p632 & 200 & 370 & 40 & 56217 & 57776 & 0.003 & 56562 & 0.052 & \textbf{56217} & 0.003 & -- & -- & \textbf{56217} & 13.1\\
 p633 & 200 & 370 & 100 & 86268 & 86877 & 0.007 & 86297 & 0.336 & \textbf{86268} & 0.012 & -- & -- & \textbf{86268} & 0.523\\
 \bottomrule\end{longtable}\endgroup
+\subsection*{Set I080 (100 instances, grouped)}
+\begin{table}[H]\centering\small\begin{tabular}{@{}rrrrrrrrrrrr@{}}\toprule
+\(k\) & \# & \multicolumn{2}{c}{G1} & \multicolumn{2}{c}{G2} & \multicolumn{2}{c}{G3} & \multicolumn{2}{c}{DP} & \multicolumn{2}{c}{B\&B}\\
+ & & gap \% & opt & gap \% & opt & gap \% & opt & solved & max s & solved & max s\\\midrule
+6 & 25 & 14.83 & 0 & 7.76 & 5 & 7.53 & 2 & 25 & 0.01 & 25 & 0.03\\
+8 & 25 & 18.28 & 1 & 8.42 & 5 & 6.44 & 1 & 25 & 0.01 & 25 & 0.04\\
+16 & 25 & 19.66 & 0 & 12.83 & 1 & 9.27 & 0 & 25 & 4.40 & 25 & 0.29\\
+20 & 25 & 21.27 & 0 & 13.93 & 2 & 9.32 & 0 & 25 & 159.31 & 25 & 0.53\\
+\bottomrule\end{tabular}\end{table}
 \subsection*{Set Adversarial}
 \begingroup\scriptsize\setlength{\tabcolsep}{3.2pt}
 \begin{longtable}{@{}lrrrrrrrrrrrrrr@{}}\toprule
@@ -87,6 +96,18 @@ star\_l09 & 10 & 45 & 9 & 90 & 152 & 0.000 & 152 & 0.001 & \textbf{90} & 0.000 &
 star\_l10 & 11 & 55 & 10 & 100 & 171 & 0.000 & 171 & 0.000 & \textbf{100} & 0.000 & \textbf{100} & 0.001 & \textbf{100} & 0.001\\
 star\_l11 & 12 & 66 & 11 & 110 & 190 & 0.000 & 190 & 0.000 & \textbf{110} & 0.000 & \textbf{110} & 0.005 & \textbf{110} & 0.001\\
 star\_l12 & 13 & 78 & 12 & 120 & 209 & 0.000 & 209 & 0.000 & \textbf{120} & 0.000 & \textbf{120} & 0.007 & \textbf{120} & 0.001\\
+\bottomrule\end{longtable}\endgroup
+\subsection*{Set Random}
+\begingroup\scriptsize\setlength{\tabcolsep}{3.2pt}
+\begin{longtable}{@{}lrrrrrrrrrrrrrr@{}}\toprule
+Inst. & \(n\) & \(m\) & \(k\) & OPT & \multicolumn{2}{c}{G1} & \multicolumn{2}{c}{G2} & \multicolumn{2}{c}{G3} & \multicolumn{2}{c}{DP} & \multicolumn{2}{c}{B\&B}\\
+ & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\midrule\endhead
+rand\_n0100 & 100 & 200 & 10 & 689 & 699 & 0.000 & 697 & 0.002 & 691 & 0.001 & \textbf{689} & 0.024 & \textbf{689} & 0.011\\
+rand\_n0200 & 200 & 400 & 10 & 827 & 945 & 0.001 & \textbf{827} & 0.004 & 864 & 0.001 & \textbf{827} & 0.058 & \textbf{827} & 0.033\\
+rand\_n0400 & 400 & 800 & 10 & 1226 & 1370 & 0.002 & 1244 & 0.011 & 1291 & 0.002 & \textbf{1226} & 0.177 & \textbf{1226} & 0.176\\
+rand\_n0800 & 800 & 1600 & 10 & 2005 & 2194 & 0.003 & 2046 & 0.018 & 2046 & 0.003 & \textbf{2005} & 0.246 & \textbf{2005} & 0.670\\
+rand\_n1600 & 1600 & 3200 & 10 & 2652 & 2909 & 0.007 & 2691 & 0.034 & 2706 & 0.007 & \textbf{2652} & 0.525 & \textbf{2652} & 2.086\\
+rand\_n3200 & 3200 & 6400 & 10 & 4556 & 4606 & 0.014 & 4557 & 0.065 & 4574 & 0.014 & \textbf{4556} & 1.116 & \textbf{4556} & 8.735\\
 \bottomrule\end{longtable}\endgroup
 \subsection*{Set Grid}
 \begingroup\scriptsize\setlength{\tabcolsep}{3.2pt}
@@ -121,24 +142,3 @@ grid\_k20\_s0 & 100 & 180 & 20 & 166 & 169 & 0.001 & \textbf{166} & 0.012 & 168 
 grid\_k20\_s1 & 100 & 180 & 20 & 139 & 140 & 0.001 & \textbf{139} & 0.005 & \textbf{139} & 0.001 & \textbf{139} & 113.7 & \textbf{139} & 0.017\\
 grid\_k20\_s2 & 100 & 180 & 20 & 151 & 153 & 0.003 & \textbf{151} & 0.003 & \textbf{151} & 0.001 & \textbf{151} & 107.7 & \textbf{151} & 0.024\\
 \bottomrule\end{longtable}\endgroup
-\subsection*{Set Random}
-\begingroup\scriptsize\setlength{\tabcolsep}{3.2pt}
-\begin{longtable}{@{}lrrrrrrrrrrrrrr@{}}\toprule
-Inst. & \(n\) & \(m\) & \(k\) & OPT & \multicolumn{2}{c}{G1} & \multicolumn{2}{c}{G2} & \multicolumn{2}{c}{G3} & \multicolumn{2}{c}{DP} & \multicolumn{2}{c}{B\&B}\\
- & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\midrule\endhead
-rand\_n0100 & 100 & 200 & 10 & 689 & 699 & 0.000 & 697 & 0.002 & 691 & 0.001 & \textbf{689} & 0.024 & \textbf{689} & 0.011\\
-rand\_n0200 & 200 & 400 & 10 & 827 & 945 & 0.001 & \textbf{827} & 0.004 & 864 & 0.001 & \textbf{827} & 0.058 & \textbf{827} & 0.033\\
-rand\_n0400 & 400 & 800 & 10 & 1226 & 1370 & 0.002 & 1244 & 0.011 & 1291 & 0.002 & \textbf{1226} & 0.177 & \textbf{1226} & 0.176\\
-rand\_n0800 & 800 & 1600 & 10 & 2005 & 2194 & 0.003 & 2046 & 0.018 & 2046 & 0.003 & \textbf{2005} & 0.246 & \textbf{2005} & 0.670\\
-rand\_n1600 & 1600 & 3200 & 10 & 2652 & 2909 & 0.007 & 2691 & 0.034 & 2706 & 0.007 & \textbf{2652} & 0.525 & \textbf{2652} & 2.086\\
-rand\_n3200 & 3200 & 6400 & 10 & 4556 & 4606 & 0.014 & 4557 & 0.065 & 4574 & 0.014 & \textbf{4556} & 1.116 & \textbf{4556} & 8.735\\
-\bottomrule\end{longtable}\endgroup
-\subsection*{Set I080 (100 instances, grouped)}
-\begin{table}[H]\centering\small\begin{tabular}{@{}rrrrrrrrrrrr@{}}\toprule
-\(k\) & \# & \multicolumn{2}{c}{G1} & \multicolumn{2}{c}{G2} & \multicolumn{2}{c}{G3} & \multicolumn{2}{c}{DP} & \multicolumn{2}{c}{B\&B}\\
- & & gap \% & opt & gap \% & opt & gap \% & opt & solved & max s & solved & max s\\\midrule
-6 & 25 & 14.83 & 0 & 7.76 & 5 & 7.53 & 2 & 25 & 0.01 & 25 & 0.03\\
-8 & 25 & 18.28 & 1 & 8.42 & 5 & 6.44 & 1 & 25 & 0.01 & 25 & 0.04\\
-16 & 25 & 19.66 & 0 & 12.83 & 1 & 9.27 & 0 & 25 & 4.40 & 25 & 0.29\\
-20 & 25 & 21.27 & 0 & 13.93 & 2 & 9.32 & 0 & 25 & 159.31 & 25 & 0.53\\
-\bottomrule\end{tabular}\end{table}
