@@ -1,4 +1,4 @@
-\begin{table}[H]\centering\small
+\begin{table}[!htbp]\centering\small
 \begin{tabular}{@{}lrrrrr@{}}\toprule
 Set & instances & with \(k\le20\) & solved & equal to OPT & max time (s)\\\midrule
 B & 18 & 10 & 10 & 10 & 27.19\\
@@ -11,7 +11,7 @@ Adversarial & 13 & 13 & 13 & 13 & 0.01\\
 \bottomrule\end{tabular}
 \caption{DP results. Instances with \(k>20\) are not attempted (the table would need more than \(12\cdot2^{20}n\) bytes and \(3^{20}n\) merges). Every solved instance matches the known optimum.}\label{tab:dp}
 \end{table}
-\begin{figure}[H]\centering
+\begin{figure}[!htbp]\centering
 \begin{tikzpicture}
 \begin{semilogyaxis}[width=0.48\linewidth,height=5.4cm,xlabel={terminals \(k\)},ylabel={time (s)},
   legend pos=north west,legend style={font=\scriptsize,draw=none},tick label style={font=\footnotesize},label style={font=\small},

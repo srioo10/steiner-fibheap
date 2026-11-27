@@ -23,7 +23,7 @@ an edge of weight \(\ge0\). The clean-up runs Prim on the heap (\(O(m+n\log n)\)
 \end{proof}
 
 \subsection{G1: distance-network MST (Kou, Markowsky and Berman)}
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 \For{\(i=1\) \KwTo \(k\)}{ Dijkstra from \(t_i\) (Fibonacci heap); store \(d(t_i,\cdot)\) and the predecessor tree\; }
 build \(D\) with \(D_{ij}=d(t_i,t_j)\); \(M\gets\) Prim on \(D\) (Fibonacci heap)\;
 \(H\gets\) union of the shortest paths of \(G\) for the edges of \(M\)\;
@@ -52,7 +52,7 @@ metric). That path is a spanning tree of \(D\), so \(w(\mathrm{MST}(D))\le(2-2/\
 \end{proof}
 
 \subsection{G2: shortest-path heuristic (Takahashi and Matsuyama)}
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 \(S\gets\{r\}\)\;
 \While{\(T\not\subseteq V(S)\)}{
   multi-source Dijkstra with label 0 on every vertex of \(S\), stopped when the first terminal \(t\notin V(S)\) is extracted\;
@@ -86,7 +86,7 @@ minimum (the cheapest star joining \(a,b,c\)). Let \(F\) be the current distance
 \(a,b\) and \(b,c\) are joined by zero-cost edges. The \emph{win} of \(z\) is
 \[\mathrm{win}_F(z)=w(\mathrm{MST}(F))-w(\mathrm{MST}(F[z]))-d(z).\]
 
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 Dijkstra from every terminal; \(F\gets D\); \(Z\gets\emptyset\)\;
 \Repeat{\(\max_z\mathrm{win}_F(z)\le0\)}{
   \(M\gets\) Prim on \(F\); compute \(s_{xy}\) = heaviest edge on the \(M\)-path between \(x,y\), for all pairs\;
@@ -146,7 +146,7 @@ reached. Their cost is \(19(\ell-1)\), a ratio of \(1.9(1-1/\ell)\), which appro
 win \(2\cdot19-30=8>0\), so G3 contracts triples through \(c\), \(c\) enters \(H\), and the clean-up's MST then finds the star.
 \Cref{tab:star} gives the measured costs; they match the formulas exactly.
 
-\begin{figure}[H]\centering
+\begin{figure}[!htbp]\centering
 \begin{minipage}{0.36\linewidth}\centering
 \begin{tikzpicture}[scale=1.05]
 \foreach \i in {1,...,6}{\node[circle,draw,fill=accent,text=white,inner sep=1.5pt,font=\scriptsize] (t\i) at ({60*\i}:1.6) {\(t_\i\)};}

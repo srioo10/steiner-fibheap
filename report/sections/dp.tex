@@ -45,7 +45,7 @@ Erickson--Monma--Veinott form of the Dreyfus--Wagner algorithm. The original pap
 evaluates \eqref{eq:grow} as a full \(O(n^2)\) minimisation per subset. With a Fibonacci heap one layer costs \(n\) \textsc{Insert},
 \(n\) \textsc{Extract-Min} and at most \(m\) \textsc{Decrease-Key}, that is \(O(m+n\log n)\) by \cref{thm:sequence}.
 
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 \For{\(S=1\) \KwTo \(2^{q}-1\)}{
   \eIf{\(S=\{t_i\}\)}{\(\mathrm{lab}[\cdot]\gets\infty\); \(\mathrm{lab}[t_i]\gets0\)\;}{
     \(\mathrm{lab}[\cdot]\gets\infty\); \(\ell\gets\) lowest bit of \(S\)\;

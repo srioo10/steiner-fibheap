@@ -10,7 +10,7 @@ lower a label once per edge. In the dynamic program of \cref{sec:dp} the grow st
 \textsc{Decrease-Key} calls (\cref{tab:heapcounts}). The Fibonacci heap is built for exactly this ratio: it makes
 \textsc{Decrease-Key} \(O(1)\) amortized by postponing all restructuring to \textsc{Extract-Min}.
 
-\begin{table}[H]\centering\small
+\begin{table}[!htbp]\centering\small
 \begin{tabular}{@{}lccccc@{}}\toprule
 Operation & Binary heap & Binomial heap & Pairing heap & \multicolumn{2}{c}{Fibonacci heap}\\
  & worst & worst & amortized & worst & amortized\\\midrule
@@ -50,7 +50,7 @@ check the amortized analysis against real runs.
 \Cref{tab:adt} lists the operations. Fundamental operations are those of a mergeable min-priority queue;
 auxiliary operations are internal and are listed because the amortized analysis charges their cost separately.
 
-\begin{table}[H]\centering\small
+\begin{table}[!htbp]\centering\small
 \begin{tabular}{@{}p{3.9cm}p{6.1cm}cc@{}}\toprule
 Operation & Effect & Worst case & Amortized\\\midrule
 \multicolumn{4}{@{}l}{\emph{Fundamental}}\\
@@ -78,7 +78,7 @@ The pseudocode follows the implementation line by line. One detail differs from 
 needs a mark (marks only matter for nodes that have a parent), and clearing them lowers the potential, so every bound
 below still holds.
 
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 \Fn{\textsc{Insert}\((H,x)\)}{
   \(x.\mathit{degree}\gets0;\ x.\mathit{parent}\gets x.\mathit{child}\gets\textsc{nil};\ x.\mathit{mark}\gets\textsc{false}\)\;
   add \(x\) to the root list of \(H\)\;
@@ -93,7 +93,7 @@ below still holds.
 \caption{\textsc{Insert} and \textsc{Union}: lazy, no restructuring.}
 \end{algorithm}
 
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 \Fn{\textsc{Extract-Min}\((H)\)}{
   \(z\gets H.\mathit{min}\)\;
   \ForEach{child \(x\) of \(z\)}{ add \(x\) to the root list; \(x.\mathit{parent}\gets\textsc{nil}\); \(x.\mathit{mark}\gets\textsc{false}\)\; }
@@ -120,7 +120,7 @@ below still holds.
 \caption{\textsc{Extract-Min}: all deferred work happens here.}
 \end{algorithm}
 
-\begin{algorithm}[H]
+\begin{algorithm}[!htbp]
 \Fn{\textsc{Decrease-Key}\((H,x,k)\)}{
   \lIf{\(k>x.\mathit{key}\)}{\textbf{error}}
   \(x.\mathit{key}\gets k\); \(y\gets x.\mathit{parent}\)\;
@@ -146,7 +146,7 @@ below still holds.
 there are five roots; afterwards three, with degrees 3, 1 and 0. The decrease-key on 35 then triggers a cascading cut
 because its parent 26 is already marked.
 
-\begin{figure}[H]\centering
+\begin{figure}[!htbp]\centering
 \tikzset{fn/.style={circle,draw,minimum size=6.2mm,inner sep=0pt,font=\scriptsize},
          mk/.style={fn,fill=black!70,text=white}, mn/.style={fn,very thick,draw=accent},
          level distance=9mm, sibling distance=8mm, edge from parent/.style={draw}}

@@ -202,7 +202,7 @@ for a in ALG:
 put("amort.ops", f"{tot_ops / 1e9:.2f}\\,billion" if tot_ops > 1e9 else f"{tot_ops / 1e6:.0f}\\,million")
 put("amort.ratio", fmt(tot_act / tot_bound, 2))
 with open(os.path.join(GEN, "heapcounts.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\n\\begin{tabular}{@{}lrrrrrrrrr@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\n\\begin{tabular}{@{}lrrrrrrrrr@{}}\\toprule\n")
     f.write("Solver & runs & \\textsc{Insert} & \\textsc{Extr.-Min} & \\textsc{Decr.-Key} & links & cuts & actual & bound & ratio\\\\\\midrule\n")
     for s, nr, ins, ext, dec, lnk, cut, act, bound in rows_h:
         f.write(f"{s} & {nr} & {ins/1e6:.1f}M & {ext/1e6:.1f}M & {dec/1e6:.1f}M & {lnk/1e6:.1f}M & {cut/1e6:.2f}M & {act/1e6:.1f}M & {bound/1e6:.1f}M & {act/bound:.2f}\\\\\n")
@@ -251,7 +251,7 @@ def tree_of(binary, path):
     return edges
 
 
-gadget_tex = ["\\begin{figure}[H]\\centering"]
+gadget_tex = ["\\begin{figure}[!htbp]\\centering"]
 for tag, binary, a in [("g1", "greedy1_kmb", "G1_KMB"), ("g2", "greedy2_sph", "G2_SPH"), ("g3", "greedy3_zelikovsky", "G3_Zelikovsky")]:
     path = os.path.join(ROOT, "instances", "adversarial", f"adv_{tag}.stp")
     n, E, T = read_stp(path)
@@ -287,7 +287,7 @@ with open(os.path.join(GEN, "gadgets.tex"), "w") as f:
 
 # ---------------------------------------------------------------- greedy gap table
 with open(os.path.join(GEN, "greedy_gaps.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\n\\begin{tabular}{@{}lr" + "rrrr" * 3 + "@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\n\\begin{tabular}{@{}lr" + "rrrr" * 3 + "@{}}\\toprule\n")
     f.write(" & & \\multicolumn{4}{c}{G1 KMB} & \\multicolumn{4}{c}{G2 SPH (best root)} & \\multicolumn{4}{c}{G3 Zelikovsky}\\\\\n")
     f.write("\\cmidrule(lr){3-6}\\cmidrule(lr){7-10}\\cmidrule(l){11-14}\n")
     f.write("Set & \\# & mean & max & opt & ms & mean & max & opt & ms & mean & max & opt & ms\\\\\\midrule\n")
@@ -321,7 +321,7 @@ for a in GREEDY:
 
 # ---------------------------------------------------------------- SPH root dependence
 with open(os.path.join(GEN, "sph_roots.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\n\\begin{tabular}{@{}lrrrrr@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\n\\begin{tabular}{@{}lrrrrr@{}}\\toprule\n")
     f.write("Set & G1 & G2, first terminal & G2, worst root & G2, best root & worst \\(>\\) G1\\\\\\midrule\n")
     worse_total = 0
     for s in SETS:
@@ -358,7 +358,7 @@ c_fit = st.mean(grid_k20) / (3 ** 19 * 100) if grid_k20 else 1e-9
 put("dp.cfit", f"{c_fit:.3e}")
 put("dp.grid.k20", fmt(st.mean(grid_k20), 1) if grid_k20 else "--")
 with open(os.path.join(GEN, "dp_results.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\n\\begin{tabular}{@{}lrrrrr@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\n\\begin{tabular}{@{}lrrrrr@{}}\\toprule\n")
     f.write("Set & instances & with \\(k\\le20\\) & solved & equal to OPT & max time (s)\\\\\\midrule\n")
     for s in SETS:
         rs = [r for r in dp if r["set"] == s]
@@ -371,7 +371,7 @@ with open(os.path.join(GEN, "dp_results.tex"), "w") as f:
         f.write(f"{s} & {len(rs)} & {len(att)} & {len(ok)} & {eq} & {mt}\\\\\n")
     f.write("\\bottomrule\\end{tabular}\n\\caption{DP results. Instances with \\(k>20\\) are not attempted (the table would need more than "
             "\\(12\\cdot2^{20}n\\) bytes and \\(3^{20}n\\) merges). Every solved instance matches the known optimum.}\\label{tab:dp}\n\\end{table}\n")
-    f.write("""\\begin{figure}[H]\\centering
+    f.write("""\\begin{figure}[!htbp]\\centering
 \\begin{tikzpicture}
 \\begin{semilogyaxis}[width=0.48\\linewidth,height=5.4cm,xlabel={terminals \\(k\\)},ylabel={time (s)},
   legend pos=north west,legend style={font=\\scriptsize,draw=none},tick label style={font=\\footnotesize},label style={font=\\small},
@@ -398,7 +398,7 @@ and the measured curve follows it. Right: time against \\(n\\) on sparse random 
 
 # ---------------------------------------------------------------- B&B results
 with open(os.path.join(GEN, "bnb_results.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{@{}lrrrrrrrrr@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{@{}lrrrrrrrrr@{}}\\toprule\n")
     f.write("Set & \\# & solved & \\(|V|\\) left & \\(|E|\\) left & root gap \\% & nodes: median & max & mean s & max s\\\\\\midrule\n")
     for s in SETS:
         rs = [r for r in bb if r["set"] == s]
@@ -430,7 +430,7 @@ with open(os.path.join(GEN, "bnb_results.tex"), "w") as f:
     bb_faster = sum(1 for i in both if by[i]["BnB"]["time_ms"] < by[i]["DP_DreyfusWagner"]["time_ms"])
     put("both.count", len(both))
     put("both.bbfaster", bb_faster)
-    f.write("""\\begin{figure}[H]\\centering
+    f.write("""\\begin{figure}[!htbp]\\centering
 \\begin{tikzpicture}
 \\begin{loglogaxis}[width=0.42\\linewidth,height=5.6cm,xlabel={DP time (s)},ylabel={B\\&B time (s)},
   colorbar,colormap={kk}{color=(cG3) color=(cG1)},point meta=explicit,colorbar style={ylabel={\\(k\\)},font=\\footnotesize,width=2.5mm},
@@ -450,7 +450,7 @@ pair = defaultdict(dict)
 for r in abl:
     pair[(r["algo"], r["instance"])][r["heap"]] = r
 with open(os.path.join(GEN, "ablation.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\n\\begin{tabular}{@{}llrrrrr@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\n\\begin{tabular}{@{}llrrrrr@{}}\\toprule\n")
     f.write("Solver & graphs & instances & Fibonacci (s) & binary (s) & Fib.\\,/\\,bin. & Fib. faster\\\\\\midrule\n")
     for a in ["G1_KMB", "G2_SPH", "G3_Zelikovsky", "DP_DreyfusWagner"]:
         for cls, test in [("sparse, \\(m/n<10\\)", lambda r: r["m"] < 10 * r["n"]), ("dense, \\(m/n\\ge10\\)", lambda r: r["m"] >= 10 * r["n"])]:
@@ -507,10 +507,10 @@ def time_cell(r):
 with open(os.path.join(GEN, "appendix_tables.tex"), "w") as f:
     for s in ["B", "C", "P6E"]:
         ins = sorted([i for i in by if inst_set[i] == s])
-        f.write(f"\\subsection*{{Set {s}}}\n\\begingroup\\scriptsize\\setlength{{\\tabcolsep}}{{3.2pt}}\n")
-        f.write("\\begin{longtable}{@{}lrrrr" + "rr" * 5 + "@{}}\\toprule\n")
+        f.write(f"\\needspace{{10\\baselineskip}}\\subsection*{{Set {s}}}\n\\begingroup\\footnotesize\\setlength{{\\tabcolsep}}{{2.6pt}}\\setlength{{\\LTpre}}{{2pt}}\n")
+        f.write("\\begin{longtable}{@{}lrrrr" + "@{\\hspace{9pt}}rr" * 5 + "@{}}\\toprule\n")
         f.write("Inst. & \\(n\\) & \\(m\\) & \\(k\\) & OPT & \\multicolumn{2}{c}{G1} & \\multicolumn{2}{c}{G2} & \\multicolumn{2}{c}{G3} & \\multicolumn{2}{c}{DP} & \\multicolumn{2}{c}{B\\&B}\\\\\n")
-        f.write(" & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\\\\midrule\\endhead\n")
+        f.write("\\cmidrule(l{6pt}){6-7}\\cmidrule(l{6pt}){8-9}\\cmidrule(l{6pt}){10-11}\\cmidrule(l{6pt}){12-13}\\cmidrule(l{6pt}){14-15}\n & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\\\\midrule\\endhead\n")
         for i in ins:
             n, m, k, o = info[i]
             cells = []
@@ -520,7 +520,7 @@ with open(os.path.join(GEN, "appendix_tables.tex"), "w") as f:
             f.write(f"{i.replace('_', '\\_')} & {n} & {m} & {k} & {o} & " + " & ".join(cells) + "\\\\\n")
         f.write("\\bottomrule\\end{longtable}\\endgroup\n")
     # I080 grouped by k
-    f.write("\\subsection*{Set I080 (100 instances, grouped)}\n\\begin{table}[H]\\centering\\small\\begin{tabular}{@{}rr" + "rr" * 5 + "@{}}\\toprule\n")
+    f.write("\\needspace{12\\baselineskip}\\subsection*{Set I080 (100 instances, grouped)}\n\\begin{center}\\footnotesize\\setlength{\\tabcolsep}{5pt}\\begin{tabular}{@{}rr" + "rr" * 5 + "@{}}\\toprule\n")
     f.write("\\(k\\) & \\# & \\multicolumn{2}{c}{G1} & \\multicolumn{2}{c}{G2} & \\multicolumn{2}{c}{G3} & \\multicolumn{2}{c}{DP} & \\multicolumn{2}{c}{B\\&B}\\\\\n")
     f.write(" & & gap \\% & opt & gap \\% & opt & gap \\% & opt & solved & max s & solved & max s\\\\\\midrule\n")
     for k in sorted({info[i][2] for i in by if inst_set[i] == "I080"}):
@@ -533,14 +533,14 @@ with open(os.path.join(GEN, "appendix_tables.tex"), "w") as f:
             ok = [by[i][a] for i in ins if solved(by[i][a])]
             cells += [str(len(ok)), f"{max(r['time_ms'] for r in ok)/1000:.2f}" if ok else "--"]
         f.write(f"{k} & {len(ins)} & " + " & ".join(cells) + "\\\\\n")
-    f.write("\\bottomrule\\end{tabular}\\end{table}\n")
+    f.write("\\bottomrule\\end{tabular}\\end{center}\n")
 
     for s in ["Adversarial", "Random", "Grid"]:
         ins = sorted([i for i in by if inst_set[i] == s])
-        f.write(f"\\subsection*{{Set {s}}}\n\\begingroup\\scriptsize\\setlength{{\\tabcolsep}}{{3.2pt}}\n")
-        f.write("\\begin{longtable}{@{}lrrrr" + "rr" * 5 + "@{}}\\toprule\n")
+        f.write(f"\\needspace{{10\\baselineskip}}\\subsection*{{Set {s}}}\n\\begingroup\\footnotesize\\setlength{{\\tabcolsep}}{{2.6pt}}\\setlength{{\\LTpre}}{{2pt}}\n")
+        f.write("\\begin{longtable}{@{}lrrrr" + "@{\\hspace{9pt}}rr" * 5 + "@{}}\\toprule\n")
         f.write("Inst. & \\(n\\) & \\(m\\) & \\(k\\) & OPT & \\multicolumn{2}{c}{G1} & \\multicolumn{2}{c}{G2} & \\multicolumn{2}{c}{G3} & \\multicolumn{2}{c}{DP} & \\multicolumn{2}{c}{B\\&B}\\\\\n")
-        f.write(" & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\\\\midrule\\endhead\n")
+        f.write("\\cmidrule(l{6pt}){6-7}\\cmidrule(l{6pt}){8-9}\\cmidrule(l{6pt}){10-11}\\cmidrule(l{6pt}){12-13}\\cmidrule(l{6pt}){14-15}\n & & & & & cost & s & cost & s & cost & s & cost & s & cost & s\\\\\\midrule\\endhead\n")
         for i in ins:
             n, m, k, o = info[i]
             cells = []
@@ -552,7 +552,7 @@ with open(os.path.join(GEN, "appendix_tables.tex"), "w") as f:
 
 # ---------------------------------------------------------------- overview table (one row per algorithm)
 with open(os.path.join(GEN, "overview.tex"), "w") as f:
-    f.write("\\begin{table}[H]\\centering\\small\n\\begin{tabular}{@{}llrrrr@{}}\\toprule\n")
+    f.write("\\begin{table}[!htbp]\\centering\\small\n\\begin{tabular}{@{}llrrrr@{}}\\toprule\n")
     f.write("Solver & Paradigm & runs & optimal & mean gap (\\%) & total time (s)\\\\\\midrule\n")
     para = {"G1_KMB": "greedy", "G2_SPH": "greedy", "G3_Zelikovsky": "greedy", "DP_DreyfusWagner": "dynamic programming", "BnB": "branch-and-bound"}
     for a in ALG:

@@ -9,13 +9,22 @@
 \usepackage{aliascnt}
 \usepackage[nameinlink,capitalise]{cleveref}
 \emergencystretch=2em
+% block paragraphs: no first-line indent, a half line between paragraphs, so every left edge lines up
+\usepackage[skip=0.55\baselineskip plus 2pt minus 1pt]{parskip}
+% let floats share pages with text instead of leaving half-empty pages
+\renewcommand{\topfraction}{0.85}\renewcommand{\bottomfraction}{0.6}\renewcommand{\textfraction}{0.12}
+\renewcommand{\floatpagefraction}{0.8}\setcounter{topnumber}{3}\setcounter{totalnumber}{4}
+\setlength{\textfloatsep}{14pt plus 4pt minus 4pt}\setlength{\floatsep}{12pt plus 4pt minus 2pt}
+\usepackage{needspace}
+% pages holding only floats stack them from the top instead of spreading them out
+\makeatletter\setlength{\@fptop}{0pt}\setlength{\@fpsep}{16pt plus 4pt}\setlength{\@fpbot}{0pt plus 1fil}\makeatother
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta,positioning,calc,shapes}
 \definecolor{accent}{HTML}{1F4E79}
 \definecolor{soft}{HTML}{EAF1F8}
 \definecolor{cG1}{HTML}{D55E00}\definecolor{cG2}{HTML}{009E73}\definecolor{cG3}{HTML}{0072B2}
 \definecolor{cDP}{HTML}{CC79A7}\definecolor{cBB}{HTML}{555555}
-\captionsetup{font=small,labelfont=bf}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
 \setlist{itemsep=1pt,topsep=3pt}
 \sisetup{group-separator={,},group-minimum-digits=4}
 \titleformat{\section}{\Large\bfseries\color{accent}}{\thesection}{0.8em}{}
@@ -25,6 +34,9 @@
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 % aliascnt gives each environment its own counter name, so cleveref prints Lemma/Corollary, not Theorem
+% parskip zeroes the list \topsep that amsthm uses, so the spacing around theorems is set here
+\newtheoremstyle{plain}{9pt}{5pt}{\itshape}{}{\bfseries}{.}{.5em}{}
+\newtheoremstyle{definition}{9pt}{5pt}{\normalfont}{}{\bfseries}{.}{.5em}{}
 \theoremstyle{plain}\newtheorem{theorem}{Theorem}[section]
 \newaliascnt{lemma}{theorem}\newtheorem{lemma}[lemma]{Lemma}\aliascntresetthe{lemma}
 \newaliascnt{corollary}{theorem}\newtheorem{corollary}[corollary]{Corollary}\aliascntresetthe{corollary}
