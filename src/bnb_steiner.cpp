@@ -9,10 +9,11 @@
 //   2. Lower bound at every node: Wong's dual ascent on the bidirected cut LP
 //        min sum c_a x_a  s.t.  x(delta^-(W)) >= 1  for W with W cap T != {}, r not in W.
 //      Any dual-feasible y gives LB = sum y_W  <=  OPT (weak duality), so the bound is
-//      admissible. Terminals waiting for an ascent step sit in a Fibonacci heap keyed
-//      by the size of their current cut (smallest cut first, Wong 1984).
+//      admissible. The arcs entering the growing component sit in a Fibonacci heap
+//      with a lazy offset (see dual_ascent). At the root, 16 root terminals are tried.
 //   3. Upper bound at every node: shortest-path heuristic on the node graph and on
-//      the subgraph of arcs whose reduced cost is zero.
+//      the subgraph of arcs whose reduced cost is zero (64 start terminals at the
+//      root), improved by vertex insertion/elimination local search.
 //   4. Reduced-cost elimination: with reduced costs c', LB and incumbent UB, a
 //      non-terminal v (an arc u->v) can be in no tree cheaper than UB if
 //        LB + d'(r, v) + d'(v, T)            >= UB      (vertex test)

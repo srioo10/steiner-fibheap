@@ -26,7 +26,7 @@ else
   SETS="instances/steinlib/B instances/steinlib/C instances/steinlib/P6E instances/steinlib/I080 instances/adversarial instances/synthetic"
 fi
 
-HEADER=$(./build/greedy1_kmb --header | head -1)
+HEADER=$(./build/greedy1_kmb instances/steinlib/B/b01.stp --header | head -1)
 jobs_file=$(mktemp)
 for d in $SETS; do
   for f in "$d"/*.stp; do
@@ -64,8 +64,8 @@ echo "wrote results/main.csv ($(($(wc -l < results/main.csv) - 1)) rows)"
 echo "heap ablation ..."
 {
   echo "$HEADER"
-  for f in instances/steinlib/B/*.stp instances/steinlib/I080/i080-0[0-4]*.stp instances/synthetic/*.stp; do
-    k=$(grep -m1 -i '^Terminals' "$f" | awk '{print $2}')
+  for f in instances/steinlib/B/*.stp instances/steinlib/C/c0[1267].stp instances/steinlib/C/c1[1267].stp instances/steinlib/I080/i080-0[0-4]*.stp instances/synthetic/*.stp; do
+    k=$(grep -m1 -i '^Terminals' "$f" | awk '{print $2}' | tr -d '\r')
     for heap in fib bin; do
       for algo in greedy1_kmb greedy2_sph greedy3_zelikovsky dp_dreyfus_wagner; do
         [[ $algo == dp_dreyfus_wagner && $k -gt 16 ]] && continue
