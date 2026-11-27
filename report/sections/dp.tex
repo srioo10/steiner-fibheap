@@ -72,7 +72,7 @@ merges, each a loop over \(n\) vertices. (For \(k=9\) that is 3025 merges, and t
 \(2^{q}-1\) Dijkstra runs at \(O(m+n\log n)\) each, and the table has \(2^{q}\) rows of \(n\) entries.
 \end{proof}
 
-\noindent Fixing the root saves a factor 3 in time and 2 in memory over the textbook version, which ranges over subsets of all \(k\)
+\noindent Fixing the root saves a factor 3 in time and 2 in memory over a formulation that ranges over subsets of all \(k\)
 terminals. Each state stores an 8-byte cost and a 4-byte predecessor edge, so the table needs \(12\cdot2^{q}n\) bytes:
 \val{dp.mem.k17}\,MB for \(k=17\), \(n=100\) and \val{dp.mem.k20}\,MB for \(k=20\), \(n=80\). The solver refuses an instance whose
 table would not fit in the memory limit (8\,GB by default) instead of swapping, and it is run with \(k\le20\).

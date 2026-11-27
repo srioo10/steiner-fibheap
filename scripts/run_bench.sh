@@ -3,15 +3,17 @@
 #   results/main.csv            one row per (algorithm, instance), Fibonacci heap
 #   results/heap_ablation.csv   Fibonacci vs binary heap, same algorithms, run one at a time
 # Options: --small   SteinLib B only (about a minute)
+#          --ablation  heap comparison only (needs an idle machine)
 #          --jobs N  parallel jobs for the main table (default 6; timings in the
 #                    ablation are always measured serially)
 # Every tree is checked by the validator in include/graph.hpp before its row is written.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-SMALL=0; JOBS=6; TL=300
+SMALL=0; JOBS=6; TL=300; ABL_ONLY=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --small) SMALL=1 ;;
+    --ablation) ABL_ONLY=1 ;;
     --jobs) JOBS="$2"; shift ;;
     --time-limit) TL="$2"; shift ;;
   esac
@@ -27,6 +29,7 @@ else
 fi
 
 HEADER=$(./build/greedy1_kmb instances/steinlib/B/b01.stp --header | head -1)
+if [[ $ABL_ONLY == 0 ]]; then
 jobs_file=$(mktemp)
 for d in $SETS; do
   for f in "$d"/*.stp; do
@@ -59,6 +62,7 @@ echo "running $(wc -l < "$jobs_file") jobs on $JOBS cores ..."
 mv results/main.csv.tmp results/main.csv
 rm -f "$jobs_file"
 echo "wrote results/main.csv ($(($(wc -l < results/main.csv) - 1)) rows)"
+fi
 
 # ---- heap ablation: serial, best of 3 runs, instances where the DP finishes quickly
 echo "heap ablation ..."

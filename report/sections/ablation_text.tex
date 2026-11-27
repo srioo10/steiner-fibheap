@@ -1,1 +1,11 @@
-% filled after the timing rerun
+\noindent The binary heap is faster on every instance, by a factor of \val{abl.DP.sparse.ratio} for the DP on sparse graphs and
+\val{abl.G2.sparse.ratio} for G2. This does not contradict \cref{thm:sequence}: the theorem bounds the number of pointer
+operations, and the binary heap loses on that count, but it keeps its keys in one array that stays in cache, while every Fibonacci
+node is a separate allocation with four pointers. On these graphs the asymptotic advantage has little to work with, because a
+Dijkstra run on a graph with \(m/n<10\) does fewer decrease-keys than extract-mins (\cref{tab:heapcounts}), and each binary-heap
+decrease-key moves a key only a few levels.
+
+The gap does narrow where the theory says it should. On the dense C graphs the DP ratio falls to \val{abl.DP.dense.ratio}, and
+on \texttt{c17} (\(m/n=25\)) the run makes \val{abl.dp.c17.decr} decrease-keys against \val{abl.dp.c17.extr} extract-mins and
+takes \val{abl.dp.c17.fib}\,ms with the Fibonacci heap against \val{abl.dp.c17.bin}\,ms with the binary heap. We report the
+Fibonacci heap as the structure that gives the proved bounds, not as the faster choice on SteinLib-sized inputs.

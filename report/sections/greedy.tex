@@ -115,7 +115,8 @@ orders are symmetric.
 
 \paragraph{Running time.} \(k\) Dijkstra runs cost \(O(k(m+n\log n))\). Each round costs \(O(k^2)\) for Prim on the heap and for the
 \(s\) matrix (one traversal of \(M\) per terminal), \(O(k^3)\) to scan the triples with \cref{lem:gain}, and \(O(n)\) per centre that
-has to be computed. Every accepted triple merges three components into one, so there are at most \((k-1)/2\) rounds, and the total
+has to be computed. Centres are cached across rounds, so each of the \(\binom{k}{3}\) triples has its centre computed at most once,
+\(O(k^3n)\) in all. Every accepted triple merges three components into one, so there are at most \((k-1)/2\) rounds, and the total
 is \(O(k(m+n\log n)+k^4+k^3n)\). In practice few centres are computed: a triple is skipped when its MST saving alone cannot beat the
 best win so far, or when it cannot beat it even with the lower bound \(d(z)\ge(D_{ab}+D_{bc}+D_{ac})/2\) (each leg of the star lies on two of
 the three pairwise paths). On \texttt{b18} (\(k=50\)) the code scans \val{g3.b18.scanned} triples and computes \val{g3.b18.centres} centres.
