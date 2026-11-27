@@ -10,5 +10,5 @@ G3 & dense, \(m/n\ge10\) & 7 & 0.003 & 0.002 & 1.50 & 0/7\\
 DP & sparse, \(m/n<10\) & 59 & 3.573 & 2.022 & 1.77 & 0/59\\
 DP & dense, \(m/n\ge10\) & 7 & 0.072 & 0.055 & 1.31 & 0/7\\
 \bottomrule\end{tabular}
-\caption{Total time with each heap (best of three serial runs per instance). Sparse: SteinLib B, I080 (\(k\le16\) for the DP), grids and random graphs; dense: SteinLib c11, c12, c16, c17 (\(m/n=5\) to \(25\)) with c01, c02, c06, c07 as sparse C graphs. The DP returns the same optimum with both heaps; the greedy strategies can break ties between equal keys differently.}\label{tab:ablation}
+\caption{Total time with each heap (best of three serial runs per instance). Instances: SteinLib B, c01, c02, c06, c07, c11, c12, c16, c17, the 25 I080 instances i080-001 to i080-045, and the grids and random graphs (the DP only for \(k\le16\)). The dense group is c16, c17 (\(m/n=25\)) and the five I080 graphs with \(m/n=39.5\). The DP returns the same optimum with both heaps; the greedy strategies can break ties between equal keys differently.}\label{tab:ablation}
 \end{table}

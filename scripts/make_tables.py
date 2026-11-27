@@ -464,9 +464,9 @@ with open(os.path.join(GEN, "ablation.tex"), "w") as f:
             faster = sum(1 for p in ps if p["fib"]["time_ms"] < p["bin"]["time_ms"])
             f.write(f"{SHORT[a]} & {cls} & {len(ps)} & {tf:.3f} & {tb:.3f} & {tf/tb:.2f} & {faster}/{len(ps)}\\\\\n")
             put(f"abl.{SHORT[a]}.{'dense' if 'dense' in cls else 'sparse'}.ratio", f"{tf/tb:.2f}")
-    f.write("\\bottomrule\\end{tabular}\n\\caption{Total time with each heap (best of three serial runs per instance). Sparse: SteinLib B, I080 "
-            "(\\(k\\le16\\) for the DP), grids and random graphs; dense: SteinLib c11, c12, c16, c17 (\\(m/n=5\\) to \\(25\\)) with c01, c02, c06, c07 "
-            "as sparse C graphs. The DP returns the same optimum with both heaps; the greedy strategies can break ties between equal keys "
+    f.write("\\bottomrule\\end{tabular}\n\\caption{Total time with each heap (best of three serial runs per instance). Instances: SteinLib B, c01, c02, c06, c07, c11, c12, c16, c17, "
+            "the 25 I080 instances i080-001 to i080-045, and the grids and random graphs (the DP only for \\(k\\le16\\)). The dense group is c16, c17 (\\(m/n=25\\)) and the "
+            "five I080 graphs with \\(m/n=39.5\\). The DP returns the same optimum with both heaps; the greedy strategies can break ties between equal keys "
             "differently.}\\label{tab:ablation}\n\\end{table}\n")
     for inst in ["c17", "c12", "c16"]:
         p = pair.get(("DP_DreyfusWagner", inst), {})
