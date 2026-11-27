@@ -136,41 +136,83 @@ static inline int arc_in(const Graph& g, int x, const Arc& a) { return g.E[size_
 
 struct DualAscent { bool feasible = true; int64_t lb = 0; std::vector<int64_t> rc; long long steps = 0; };
 
+// Wong's ascent, one terminal component at a time. For an active terminal t the set
+// W = {vertices that reach t through arcs of reduced cost 0} is grown. The arcs
+// entering W wait in a Fibonacci heap keyed by (reduced cost + Y at insertion), where
+// Y is the dual raised so far for this growth; so the arc with the smallest remaining
+// reduced cost is the heap minimum, and raising y_W by delta lowers every cut arc by
+// delta without touching any of them (lazy offset). Raising stops when W contains the
+// root (t is connected) or another active terminal t' (t is then connected through t',
+// which stays active). Every growth step saturates one arc, so there are at most 2m
+// steps per terminal, each O(log m) amortized: O(k m log m) per call.
 static DualAscent dual_ascent(const Graph& g, int root) {
     DualAscent da;
-    da.rc.resize(2 * size_t(g.m()));
+    const size_t A = 2 * size_t(g.m());
+    da.rc.resize(A);
     for (int e = 0; e < g.m(); ++e) da.rc[2 * size_t(e)] = da.rc[2 * size_t(e) + 1] = g.E[size_t(e)].w;
-    FibHeap queue;                                   // active terminals, key = |cut|
-    for (int t : g.terminals) if (t != root) queue.insert(g.deg(t), t);
-    std::vector<int> stamp(size_t(g.n), 0), stack, W;
+    std::vector<char> active(size_t(g.n), 0);
+    std::vector<int> order;
+    for (int t : g.terminals) if (t != root) { active[size_t(t)] = 1; order.push_back(t); }
+    // smallest degree first: small cuts give the most bound per saturated arc
+    std::sort(order.begin(), order.end(), [&](int x, int y) { return g.deg(x) < g.deg(y); });
+    std::vector<int> inW(size_t(g.n), 0), stack;
+    std::vector<int64_t> base(A, 0);              // rc at insertion + Y at insertion
+    std::vector<int> in_cut(A, 0);
     int cur = 0;
-    while (!queue.empty()) {
-        int t = queue.extract_min().second;
-        // W = all vertices that reach t through arcs of reduced cost 0
-        ++cur; W.clear(); stack.assign(1, t); stamp[size_t(t)] = cur;
-        bool has_root = false;
-        while (!stack.empty()) {
-            int x = stack.back(); stack.pop_back();
-            W.push_back(x);
-            if (x == root) { has_root = true; break; }
-            for (const Arc* a = g.begin(x); a != g.end(x); ++a)
-                if (stamp[size_t(a->to)] != cur && da.rc[size_t(arc_in(g, x, *a))] == 0) {
-                    stamp[size_t(a->to)] = cur; stack.push_back(a->to);
+    FibHeap cut;
+    for (size_t qi = 0; qi < order.size(); ++qi) {
+        int t = order[qi];
+        if (!active[size_t(t)]) continue;
+        ++cur;
+        cut.clear();
+        int64_t Y = 0;
+        std::vector<int> cut_arcs;
+        bool stop = false;
+        // add x to W, then everything that reaches x through zero arcs
+        auto absorb = [&](int x0) {
+            stack.assign(1, x0); inW[size_t(x0)] = cur;
+            while (!stack.empty()) {
+                int x = stack.back(); stack.pop_back();
+                if (x == root || (x != t && active[size_t(x)])) stop = true;
+                for (const Arc* a = g.begin(x); a != g.end(x); ++a) {
+                    int ai = arc_in(g, x, *a);       // arc a->to  ->  x
+                    if (inW[size_t(a->to)] == cur) {
+                        // the tail is inside now: the arc leaves the cut, freeze its reduced cost
+                        if (in_cut[size_t(ai)] == cur) { da.rc[size_t(ai)] = base[size_t(ai)] - Y; in_cut[size_t(ai)] = -1; }
+                        continue;
+                    }
+                    int64_t r = da.rc[size_t(ai)];
+                    if (r == 0) { inW[size_t(a->to)] = cur; stack.push_back(a->to); continue; }
+                    base[size_t(ai)] = r + Y; in_cut[size_t(ai)] = cur;
+                    cut.insert(base[size_t(ai)], ai); cut_arcs.push_back(ai);
                 }
+                // arcs out of x into W are no longer cut arcs either
+                for (const Arc* a = g.begin(x); a != g.end(x); ++a) {
+                    int ao = arc_out(g, x, *a);
+                    if (inW[size_t(a->to)] == cur && in_cut[size_t(ao)] == cur) { da.rc[size_t(ao)] = base[size_t(ao)] - Y; in_cut[size_t(ao)] = -1; }
+                }
+            }
+        };
+        absorb(t);
+        while (!stop) {
+            // smallest remaining reduced cost among arcs still entering W
+            int ai = -1;
+            while (!cut.empty()) {
+                int cand = cut.minimum()->item;
+                if (in_cut[size_t(cand)] == cur) { ai = cand; break; }
+                cut.extract_min();                   // stale: tail already absorbed
+            }
+            if (ai < 0) { da.feasible = false; return da; }   // nothing enters W: infeasible
+            int64_t delta = base[size_t(ai)] - Y;
+            Y += delta; da.lb += delta; ++da.steps;
+            cut.extract_min();
+            da.rc[size_t(ai)] = 0; in_cut[size_t(ai)] = -1;
+            int tail = g.E[size_t(ai / 2)].u == g.E[size_t(ai / 2)].v ? -1 : (ai % 2 == 0 ? g.E[size_t(ai / 2)].u : g.E[size_t(ai / 2)].v);
+            absorb(tail);
         }
-        if (has_root) continue;                      // t is connected to the root: inactive
-        // delta = smallest reduced cost on the arcs entering W
-        int64_t delta = INF; int cut = 0;
-        for (int x : W)
-            for (const Arc* a = g.begin(x); a != g.end(x); ++a)
-                if (stamp[size_t(a->to)] != cur) { delta = std::min(delta, da.rc[size_t(arc_in(g, x, *a))]); ++cut; }
-        if (delta >= INF) { da.feasible = false; return da; }   // no arc enters W: infeasible
-        for (int x : W)
-            for (const Arc* a = g.begin(x); a != g.end(x); ++a)
-                if (stamp[size_t(a->to)] != cur) da.rc[size_t(arc_in(g, x, *a))] -= delta;
-        da.lb += delta;
-        ++da.steps;
-        queue.insert(cut, t);
+        // write back the lowered reduced costs of arcs that still enter W
+        for (int ai : cut_arcs) if (in_cut[size_t(ai)] == cur) { da.rc[size_t(ai)] = base[size_t(ai)] - Y; in_cut[size_t(ai)] = -1; }
+        active[size_t(t)] = 0;
     }
     return da;
 }
@@ -229,6 +271,52 @@ static std::vector<int> sph(const Graph& g, int root, const std::vector<char>& a
         }
     }
     return mst_prune(g, edges, pq);
+}
+
+// Local search on the vertex set of a tree (Minoux 1990; Rayward-Smith & Clare 1986):
+// a Steiner tree is determined by its vertex set S as MST(G[S]) with non-terminal
+// leaves pruned. Try deleting each Steiner vertex and inserting each outside vertex
+// next to S; keep any change that lowers the cost. Each pass is n MST computations,
+// O(n (m + n log n)); passes repeat until nothing improves (at most 20).
+static std::vector<int> mst_of_set(const Graph& g, const std::vector<char>& S, int size, FibPQ& pq) {
+    std::vector<int> t = prim_induced(g, S, pq);
+    if (int(t.size()) != size - 1) return {};      // G[S] is disconnected
+    return prune_leaves(g, t);
+}
+static std::vector<int> local_search(const Graph& g, std::vector<int> tree, FibPQ& pq) {
+    if (g.k() <= 2) return tree;
+    std::vector<char> S(size_t(g.n), 0);
+    for (int t : g.terminals) S[size_t(t)] = 1;
+    for (int e : tree) { S[size_t(g.E[size_t(e)].u)] = 1; S[size_t(g.E[size_t(e)].v)] = 1; }
+    int size = int(std::count(S.begin(), S.end(), 1));
+    int64_t best = cost_of(g, tree);
+    for (int pass = 0; pass < 20; ++pass) {
+        bool improved = false;
+        for (int v = 0; v < g.n; ++v) {
+            if (g.is_term[size_t(v)] || g.deg(v) == 0) continue;
+            bool inside = S[size_t(v)];
+            if (!inside) {                       // only vertices adjacent to S can help
+                bool adj = false;
+                for (const Arc* a = g.begin(v); a != g.end(v) && !adj; ++a) adj = S[size_t(a->to)];
+                if (!adj) continue;
+            }
+            S[size_t(v)] = !inside;
+            int sz = size + (inside ? -1 : 1);
+            std::vector<int> t = mst_of_set(g, S, sz, pq);
+            int64_t c = t.empty() ? INF : cost_of(g, t);
+            if (c < best) {
+                best = c; tree = t; improved = true;
+                std::fill(S.begin(), S.end(), 0);  // pruning may have dropped vertices
+                for (int x : g.terminals) S[size_t(x)] = 1;
+                for (int e : tree) { S[size_t(g.E[size_t(e)].u)] = 1; S[size_t(g.E[size_t(e)].v)] = 1; }
+                size = int(std::count(S.begin(), S.end(), 1));
+            } else {
+                S[size_t(v)] = inside;
+            }
+        }
+        if (!improved) break;
+    }
+    return tree;
 }
 
 // ============================================================ 4-5. search
@@ -303,11 +391,20 @@ int main(int argc, char** argv) {
             std::sort(gn.terminals.begin(), gn.terminals.end());
             gn.terminals.erase(std::unique(gn.terminals.begin(), gn.terminals.end()), gn.terminals.end());
             gn.build();
-            const int root = gn.terminals[0];
+            int root = gn.terminals[0];
 
             // ---- 2. lower bound
             DualAscent da = dual_ascent(gn, root);
             if (!da.feasible) { ++pruned; continue; }
+            if (nodes == 1) {
+                // root node: the bound depends on the root terminal, so try up to 16 of them
+                int tries = std::min(gn.k(), 16);
+                for (int i = 1; i < tries; ++i) {
+                    int r2 = gn.terminals[size_t(i) * size_t(gn.k()) / size_t(tries)];
+                    DualAscent d2 = dual_ascent(gn, r2);
+                    if (d2.feasible && d2.lb > da.lb) { da = std::move(d2); root = r2; }
+                }
+            }
             int64_t lb = std::max(da.lb, node.lb);
             if (nodes == 1) root_lb = da.lb;
             if (lb >= UB) { ++pruned; continue; }
@@ -315,12 +412,26 @@ int main(int argc, char** argv) {
             // ---- 3. upper bound: SPH on the node graph and on the zero-reduced-cost subgraph
             std::vector<char> zero(size_t(gn.m()), 0);
             for (int e = 0; e < gn.m(); ++e) zero[size_t(e)] = da.rc[2 * size_t(e)] == 0 || da.rc[2 * size_t(e) + 1] == 0;
+            // at the root node the heuristic is restarted from up to 64 terminals
+            std::vector<int> starts{root};
+            if (nodes == 1)
+                for (int i = 0, tries = std::min(gn.k(), 64); i < tries; ++i)
+                    starts.push_back(gn.terminals[size_t(i) * size_t(gn.k()) / size_t(tries)]);
+            std::vector<int> node_best; int64_t node_cost = INF;
+            for (int st : starts)
             for (const auto& allowed : {std::vector<char>(), zero}) {
-                std::vector<int> t = sph(gn, root, allowed, pq);
+                std::vector<int> t = sph(gn, st, allowed, pq);
                 if (t.empty() && gn.k() > 1) continue;
                 int64_t c = cost_of(gn, t);
-                if (c < UB) { UB = c; best.clear(); for (int e : t) best.push_back(map_e[size_t(e)]); }
+                if (c < node_cost) { node_cost = c; node_best = std::move(t); }
             }
+            // local search at the root, on every node whose heuristic beats the incumbent,
+            // and on every 64th node (it costs n MSTs per pass)
+            if (node_cost < INF && (nodes == 1 || node_cost < UB || nodes % 64 == 0)) {
+                node_best = local_search(gn, node_best, pq);
+                node_cost = cost_of(gn, node_best);
+            }
+            if (node_cost < UB) { UB = node_cost; best.clear(); for (int e : node_best) best.push_back(map_e[size_t(e)]); }
             if (lb >= UB) { ++pruned; continue; }
 
             // ---- 4. reduced-cost elimination (valid for the whole subtree: UB only falls)
