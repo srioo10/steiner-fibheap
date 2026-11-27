@@ -34,5 +34,8 @@ bench-small: all
 report:
 	cd report && latexmk -pdf -interaction=nonstopmode -halt-on-error report.tex
 
+zip: all
+	bash scripts/package.sh
+
 clean:
 	rm -rf $(BIN)
