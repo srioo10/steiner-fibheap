@@ -1,0 +1,33 @@
+33D32945 STP File, STP Format Version 1.0
+
+SECTION Comment
+Name    "adv_g2"
+Creator "gen_instances.py"
+Remark  "hill-climbing search maximising g2/OPT, ratio 1.3878"
+END
+
+SECTION Graph
+Nodes 8
+Edges 10
+E 4 7 10
+E 5 7 18
+E 7 8 1
+E 3 4 18
+E 3 5 9
+E 4 6 10
+E 1 4 10
+E 6 7 20
+E 1 8 20
+E 2 8 6
+END
+
+SECTION Terminals
+Terminals 5
+T 1
+T 3
+T 6
+T 7
+T 8
+END
+
+EOF

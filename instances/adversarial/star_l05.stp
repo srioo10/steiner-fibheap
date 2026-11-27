@@ -1,0 +1,38 @@
+33D32945 STP File, STP Format Version 1.0
+
+SECTION Comment
+Name    "star_l05"
+Creator "gen_instances.py"
+Remark  "tight family for KMB/SPH: OPT = 10 l, greedy = 19 (l-1)"
+END
+
+SECTION Graph
+Nodes 6
+Edges 15
+E 1 2 10
+E 1 3 10
+E 1 4 10
+E 1 5 10
+E 1 6 10
+E 2 3 19
+E 2 4 19
+E 2 5 19
+E 2 6 19
+E 3 4 19
+E 3 5 19
+E 3 6 19
+E 4 5 19
+E 4 6 19
+E 5 6 19
+END
+
+SECTION Terminals
+Terminals 5
+T 2
+T 3
+T 4
+T 5
+T 6
+END
+
+EOF

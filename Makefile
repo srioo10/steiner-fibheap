@@ -2,7 +2,7 @@ CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -march=native -Wall -Wextra -Wshadow
 BIN      := build
 ALGOS    := greedy1_kmb greedy2_sph greedy3_zelikovsky dp_dreyfus_wagner bnb_steiner
-TOOLS    := gen_instances
+TOOLS    :=
 HDRS     := $(wildcard include/*.hpp)
 
 .PHONY: all test bench bench-small report zip clean

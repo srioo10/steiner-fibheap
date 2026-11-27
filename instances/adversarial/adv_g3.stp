@@ -1,0 +1,32 @@
+33D32945 STP File, STP Format Version 1.0
+
+SECTION Comment
+Name    "adv_g3"
+Creator "gen_instances.py"
+Remark  "hill-climbing search maximising g3/OPT, ratio 1.2083"
+END
+
+SECTION Graph
+Nodes 9
+Edges 9
+E 5 8 1
+E 2 8 11
+E 6 7 1
+E 4 6 14
+E 1 7 11
+E 7 8 10
+E 2 4 13
+E 3 6 11
+E 1 9 13
+END
+
+SECTION Terminals
+Terminals 5
+T 1
+T 3
+T 4
+T 5
+T 8
+END
+
+EOF
