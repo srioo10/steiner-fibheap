@@ -1,0 +1,30 @@
+\begin{table}[H]\centering\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrrrrr@{}}\toprule
+Set & \# & solved & \(|V|\) left & \(|E|\) left & root gap \% & nodes: median & max & mean s & max s\\\midrule
+B & 18 & 18 & 60\% & 67\% & 0.05 & 1 & 3 & 0.01 & 0.05\\
+C & 20 & 19 & 79\% & 65\% & 0.61 & 3 & 23{,}088 & 17.17 & 300.02\\
+P6E & 15 & 15 & 97\% & 98\% & 0.22 & 1 & 13{,}707 & 1.10 & 13.06\\
+I080 & 100 & 100 & 86\% & 91\% & 2.31 & 10 & 835 & 0.07 & 0.53\\
+Grid & 27 & 27 & 90\% & 89\% & 0.06 & 1 & 8 & 0.02 & 0.04\\
+Random & 6 & 6 & 75\% & 77\% & 0.42 & 28 & 64 & 1.95 & 8.73\\
+Adversarial & 13 & 13 & 93\% & 93\% & 0.00 & 1 & 1 & 0.00 & 0.00\\
+\bottomrule\end{tabular}
+\caption{Branch-and-bound with a 300\,s limit. \(|V|\), \(|E|\) left: share of the graph that survives the reductions. Root gap: \((\OPT-\mathrm{LB}_{\text{root}})/\OPT\) for the dual ascent bound at the root.}\label{tab:bnb}
+\end{table}
+\noindent Instances not solved within the limit, with the bounds proved when the search stopped:
+\begin{center}\small\begin{tabular}{@{}lrrrrr@{}}\toprule
+Instance & \(k\) & lower bound & best tree & OPT & nodes\\\midrule
+c18 & 83 & 110 & 117 & 113 & 23{,}088\\
+\bottomrule\end{tabular}\end{center}
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\begin{loglogaxis}[width=0.42\linewidth,height=5.6cm,xlabel={DP time (s)},ylabel={B\&B time (s)},
+  colorbar,colormap={kk}{color=(cG3) color=(cG1)},point meta=explicit,colorbar style={ylabel={\(k\)},font=\footnotesize,width=2.5mm},
+  tick label style={font=\footnotesize},label style={font=\small},grid=major,grid style={black!8}]
+\addplot[scatter,only marks,mark=*,mark size=1.5pt,fill opacity=0.7,draw opacity=0] table[x=dp,y=bb,meta=k,col sep=comma]{generated/dp_vs_bb.csv};
+\addplot[black!50,dashed,domain=1e-5:200] {x};
+\end{loglogaxis}
+\end{tikzpicture}
+\caption{The two exact methods on the 173 instances both solve. Below the diagonal B\&B is faster; it is faster on 97 of them.
+Colour is the number of terminals: the DP time is set by \(k\), the B\&B time by how much of the graph the bound settles.}\label{fig:dpbb}
+\end{figure}

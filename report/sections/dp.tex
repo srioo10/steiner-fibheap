@@ -1,0 +1,87 @@
+% ------------------------------------------------------------------ 5
+\section{Exact paradigm 1: dynamic programming over terminal subsets}\label{sec:dp}
+
+\subsection{State and recurrence}
+Fix a root terminal \(r\) and let \(Q=T\setminus\{r\}\), \(q=|Q|=k-1\). The state is a pair \((S,v)\) with
+\(\emptyset\neq S\subseteq Q\) and \(v\in V\):
+\[\mathrm{dp}[S][v]=\text{cost of a cheapest tree in }G\text{ that contains }S\cup\{v\}.\]
+The answer is \(\mathrm{dp}[Q][r]\), a cheapest tree containing \(Q\cup\{r\}=T\). The recurrence has a base case and two
+steps:
+\begin{align}
+\mathrm{dp}[\{t\}][v]&=d(t,v), \label{eq:base}\\
+\mathrm{mrg}[S][u]&=\min_{\emptyset\neq S_1\subsetneq S}\ \mathrm{dp}[S_1][u]+\mathrm{dp}[S\setminus S_1][u] \qquad(|S|\ge2), \label{eq:merge}\\
+\mathrm{dp}[S][v]&=\min_{u\in V}\ \mathrm{mrg}[S][u]+d(u,v) \qquad(|S|\ge2). \label{eq:grow}
+\end{align}
+The merge step \eqref{eq:merge} joins two trees that meet at \(u\); the grow step \eqref{eq:grow} hangs that junction off
+\(v\) by a shortest path.
+
+\begin{lemma}[optimal substructure]\label{lem:dw}
+\eqref{eq:base}--\eqref{eq:grow} compute \(\mathrm{dp}[S][v]\) correctly for every state.
+\end{lemma}
+\begin{proof}
+For \(|S|=1\) the cheapest tree containing \(t\) and \(v\) is a shortest path. Let \(|S|\ge2\).
+
+(\(\ge\)) Take an optimal tree \(A\) for \(S\cup\{v\}\); we may assume every leaf of \(A\) is in \(S\cup\{v\}\). Walk from
+\(v\) along \(A\) while the current vertex has exactly one unvisited neighbour in \(A\) and is not in \(S\) (if \(v\) itself is a
+branch point or in \(S\), the walk stops at once). It stops at a vertex \(u\) that is a branch point or a terminal of \(S\). The walk
+is a \(v\)--\(u\) path of cost at least \(d(u,v)\). The rest of \(A\) is a tree containing \(S\cup\{u\}\) in which either \(u\) has
+two or more subtrees, or \(u\in S\). In the first case split the subtrees of \(u\) into two non-empty groups; each group contains a
+terminal of \(S\) (every leaf is in \(S\)), giving trees for \(S_1\cup\{u\}\) and \((S\setminus S_1)\cup\{u\}\). In the second
+case take \(S_1=\{u\}\), whose tree is the single vertex \(u\) with \(\mathrm{dp}[\{u\}][u]=0\). Either way the cost of \(A\) is at least
+\(d(v,u)+\mathrm{dp}[S_1][u]+\mathrm{dp}[S\setminus S_1][u]\ge\) the right-hand side of \eqref{eq:grow}.
+
+(\(\le\)) For any \(u\) and split \(S_1\), the union of a \(v\)--\(u\) shortest path and the two optimal subtrees is a connected
+subgraph containing \(S\cup\{v\}\); it contains a tree of no greater cost.
+\end{proof}
+
+\noindent Subsets are processed in increasing numerical order of their bitmask, so both halves of every split are finished before \(S\)
+is merged.
+
+\subsection{The grow step is a Dijkstra run}
+Equation \eqref{eq:grow} is a shortest-path problem with \emph{initial labels}: put \(\mathrm{mrg}[S][u]\) on every vertex and
+run Dijkstra from all of them at once. The extracted label of \(v\) is \(\min_u \mathrm{mrg}[S][u]+d(u,v)\), by the usual Dijkstra
+argument applied to a super-source joined to each \(u\) by an edge of weight \(\mathrm{mrg}[S][u]\). This is the
+Erickson--Monma--Veinott form of the Dreyfus--Wagner algorithm. The original paper precomputes all-pairs distances and
+evaluates \eqref{eq:grow} as a full \(O(n^2)\) minimisation per subset. With a Fibonacci heap one layer costs \(n\) \textsc{Insert},
+\(n\) \textsc{Extract-Min} and at most \(m\) \textsc{Decrease-Key}, that is \(O(m+n\log n)\) by \cref{thm:sequence}.
+
+\begin{algorithm}[H]
+\For{\(S=1\) \KwTo \(2^{q}-1\)}{
+  \eIf{\(S=\{t_i\}\)}{\(\mathrm{lab}[\cdot]\gets\infty\); \(\mathrm{lab}[t_i]\gets0\)\;}{
+    \(\mathrm{lab}[\cdot]\gets\infty\); \(\ell\gets\) lowest bit of \(S\)\;
+    \ForEach(\tcp*[f]{submask enumeration}){\(S_1\subsetneq S\) with \(\ell\in S_1\)}{
+      \lFor{\(v\in V\)}{\(\mathrm{lab}[v]\gets\min(\mathrm{lab}[v],\ \mathrm{dp}[S_1][v]+\mathrm{dp}[S\setminus S_1][v])\)}
+    }
+  }
+  multi-source Dijkstra on the Fibonacci heap with initial labels \(\mathrm{lab}\)\;
+  \(\mathrm{dp}[S][\cdot]\gets\mathrm{lab}\); \(\mathrm{pred}[S][\cdot]\gets\) last edge of each Dijkstra path (or \(-1\))\;
+}
+\Return \(\mathrm{dp}[Q][r]\) and the tree read back from \(\mathrm{pred}\)\;
+\caption{DP (\texttt{src/dp\_dreyfus\_wagner.cpp}). The inner loop over \(v\) is contiguous in memory and vectorises.}
+\end{algorithm}
+
+\subsection{Complexity and memory}
+\begin{theorem}\label{thm:dpcost}
+The DP runs in \(O\big(3^{q}n+2^{q}(m+n\log n)\big)\) time and \(2^{q}n\) words of memory, \(q=k-1\).
+\end{theorem}
+\begin{proof}
+Requiring the lowest bit of \(S\) to be in \(S_1\) visits each unordered split \(\{S_1,S\setminus S_1\}\) exactly once:
+\(2^{|S|-1}-1\) splits for a set of size \(|S|\ge2\). Summing over all subsets,
+\[\sum_{s=2}^{q}\binom{q}{s}\big(2^{s-1}-1\big)=\frac{3^{q}+1}{2}-2^{q}\]
+merges, each a loop over \(n\) vertices. (For \(k=9\) that is 3025 merges, and the program reports exactly 3025.) There are
+\(2^{q}-1\) Dijkstra runs at \(O(m+n\log n)\) each, and the table has \(2^{q}\) rows of \(n\) entries.
+\end{proof}
+
+\noindent Fixing the root saves a factor 3 in time and 2 in memory over the textbook version, which ranges over subsets of all \(k\)
+terminals. Each state stores an 8-byte cost and a 4-byte predecessor edge, so the table needs \(12\cdot2^{q}n\) bytes:
+\val{dp.mem.k17}\,MB for \(k=17\), \(n=100\) and \val{dp.mem.k20}\,MB for \(k=20\), \(n=80\). The solver refuses an instance whose
+table would not fit in the memory limit (8\,GB by default) instead of swapping, and it is run with \(k\le20\).
+
+\paragraph{Reading the tree back.} From \((Q,r)\) the solver follows \(\mathrm{pred}\) inside the same layer. When the
+predecessor is \(-1\) the label came from the merge step, and it looks for a split whose two halves add up to the label exactly; one
+exists by \eqref{eq:merge}. The traced edges form a connected subgraph containing \(T\) whose cost, counting shared edges once, is at
+most \(\mathrm{dp}[Q][r]\). \Cref{lem:cleanup} turns it into a tree of cost at most \(\OPT\), hence exactly \(\OPT\). The program checks
+that the tree cost equals the DP value and the validator checks the tree.
+
+\subsection{Results}
+\input{generated/dp_results.tex}

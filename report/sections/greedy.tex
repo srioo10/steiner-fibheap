@@ -1,0 +1,191 @@
+% ------------------------------------------------------------------ 4
+\section{Three greedy strategies}\label{sec:greedy}
+
+The three strategies differ in the greedy \emph{selection criterion}, that is, in which object they commit to at each step:
+\begin{description}[leftmargin=1.2cm,style=nextline]
+\item[G1] the cheapest shortest path between two terminal components (an MST of the distance network \(D\));
+\item[G2] the cheapest shortest path from the single growing tree to a terminal outside it;
+\item[G3] the triple of terminals whose connection through one Steiner vertex saves the most against the current
+spanning tree.
+\end{description}
+G1 and G2 only ever join terminals in pairs. G3 is the only one that can choose a Steiner vertex because it serves
+three terminals at once, and \cref{sec:gaps} shows that this is the step that pays off. All three end with the same
+clean-up, which we prove safe first.
+
+\begin{lemma}[clean-up]\label{lem:cleanup}
+Let \(H\subseteq G\) be connected with \(T\subseteq V(H)\). Replacing \(H\) by a minimum spanning tree of
+\(G[V(H)]\) and then deleting non-terminal leaves until none is left produces a Steiner tree of cost at most \(w(H)\).
+\end{lemma}
+\begin{proof}
+\(H\) contains a spanning tree of \(V(H)\) of cost at most \(w(H)\) (weights are non-negative), and \(H\subseteq G[V(H)]\), so
+the MST of \(G[V(H)]\) costs at most \(w(H)\). Deleting a non-terminal leaf keeps a tree that still contains \(T\) and removes
+an edge of weight \(\ge0\). The clean-up runs Prim on the heap (\(O(m+n\log n)\)) and a leaf queue (\(O(n)\)).
+\end{proof}
+
+\subsection{G1: distance-network MST (Kou, Markowsky and Berman)}
+\begin{algorithm}[H]
+\For{\(i=1\) \KwTo \(k\)}{ Dijkstra from \(t_i\) (Fibonacci heap); store \(d(t_i,\cdot)\) and the predecessor tree\; }
+build \(D\) with \(D_{ij}=d(t_i,t_j)\); \(M\gets\) Prim on \(D\) (Fibonacci heap)\;
+\(H\gets\) union of the shortest paths of \(G\) for the edges of \(M\)\;
+\Return \textsc{Clean-Up}\((H)\)\;
+\caption{G1 (\texttt{src/greedy1\_kmb.cpp}).}
+\end{algorithm}
+
+\paragraph{Running time.} \(k\) Dijkstra runs cost \(O(k(m+n\log n))\) by \cref{sec:amortized}; Prim on \(D\) costs \(O(k^2)\);
+expanding \(k-1\) paths costs \(O(kn)\); the clean-up costs \(O(m+n\log n)\). Total \(O(k(m+n\log n))\), polynomial.
+The original paper states \(O(kn^2)\) because it uses an array-based Dijkstra.
+
+\begin{theorem}\label{thm:kmb}
+Let \(\ell\ge2\) be the number of leaves of an optimal Steiner tree \(S^\ast\). Then
+\(w(\mathrm{MST}(D))\le\big(2-\tfrac{2}{\ell}\big)\OPT\), and G1 returns a tree of cost at most \(\big(2-\tfrac{2}{\ell}\big)\OPT\le\big(2-\tfrac2k\big)\OPT\).
+\end{theorem}
+\begin{proof}
+Double every edge of \(S^\ast\). The result is Eulerian; an Euler tour \(W\) has cost \(2\,\OPT\) and visits the leaves
+of \(S^\ast\) in some cyclic order \(L_1,\dots,L_\ell\). Cut \(W\) at the leaves into \(\ell\) walks \(W_j\) from \(L_j\) to
+\(L_{j+1}\). The longest of them costs at least \(2\OPT/\ell\); delete it. The other \(\ell-1\) walks form one walk of cost at
+most \(2\OPT(1-1/\ell)\) that still visits every terminal: a leaf is an end of two walks, and an inner vertex of degree
+\(\delta\ge2\) appears in \(\delta\) walks, so deleting one walk removes neither. Listing the terminals in the order this walk
+first reaches them gives a path in \(D\) whose edges are no longer than the walk segments between them (\(d\) is a shortest-path
+metric). That path is a spanning tree of \(D\), so \(w(\mathrm{MST}(D))\le(2-2/\ell)\OPT\). The expanded subgraph \(H\) costs at most
+\(w(\mathrm{MST}(D))\) (shared edges are counted once), and \cref{lem:cleanup} does not increase it. Since \(\ell\le k\), the bound
+\(2-2/k\) follows.
+\end{proof}
+
+\subsection{G2: shortest-path heuristic (Takahashi and Matsuyama)}
+\begin{algorithm}[H]
+\(S\gets\{r\}\)\;
+\While{\(T\not\subseteq V(S)\)}{
+  multi-source Dijkstra with label 0 on every vertex of \(S\), stopped when the first terminal \(t\notin V(S)\) is extracted\;
+  add the shortest path from \(S\) to \(t\) to \(S\)\;
+}
+\Return \textsc{Clean-Up}\((S)\)\;
+\caption{G2 for one root \(r\) (\texttt{src/greedy2\_sph.cpp}). The solver runs every terminal as the root and keeps the best tree.}
+\end{algorithm}
+
+\paragraph{Running time.} Each of the \(k-1\) rounds is one Dijkstra, \(O(m+n\log n)\), and adding a path is \(O(n)\). One root
+costs \(O(k(m+n\log n))\); all \(k\) roots cost \(O(k^2(m+n\log n))\). Stopping at the first terminal is safe because a Dijkstra
+label is final once it is extracted, and it shortens the rounds in practice.
+
+\begin{theorem}\label{thm:sph}
+For every root, G2 returns a tree of cost at most \(w(\mathrm{MST}(D))\le\big(2-\tfrac2\ell\big)\OPT\).
+\end{theorem}
+\begin{proof}
+Let \(S_0=\{r\}\subset S_1\subset\dots\subset S_{k-1}=T\) be the terminal sets after each round and \(\delta_i\) the cost of the
+\(i\)-th path. Because the path goes from the current tree, which contains \(S_{i-1}\), to the nearest outside terminal,
+\(\delta_i\le\min\{d(s,t):s\in S_{i-1},\,t\notin S_{i-1}\}\), the cheapest edge of \(D\) crossing the cut \((S_{i-1},T\setminus S_{i-1})\).
+Let \(M\) be an MST of \(D\). We match round \(i\) to a distinct edge of \(M\) that crosses cut \(i\). For any \(j\) rounds
+\(i_1<\dots<i_j\) the cuts split \(T\) into \(j+1\) non-empty layers \(S_{i_1-1},\,S_{i_2-1}\setminus S_{i_1-1},\dots,T\setminus S_{i_j-1}\).
+\(M\) is connected, so at least \(j\) of its edges run between different layers, and each of them crosses at least one of the
+\(j\) cuts. This is Hall's condition, so the matching exists and \(\sum_i\delta_i\le w(M)\). The clean-up does not increase the
+cost, and \cref{thm:kmb} bounds \(w(M)\).
+\end{proof}
+
+\subsection{G3: best-gain triples (Zelikovsky)}
+For a triple \(z=\{a,b,c\}\subseteq T\) let \(v(z)=\arg\min_v d(a,v)+d(b,v)+d(c,v)\) be its best centre and \(d(z)\) that
+minimum (the cheapest star joining \(a,b,c\)). Let \(F\) be the current distance network and \(F[z]\) the network in which
+\(a,b\) and \(b,c\) are joined by zero-cost edges. The \emph{win} of \(z\) is
+\[\mathrm{win}_F(z)=w(\mathrm{MST}(F))-w(\mathrm{MST}(F[z]))-d(z).\]
+
+\begin{algorithm}[H]
+Dijkstra from every terminal; \(F\gets D\); \(Z\gets\emptyset\)\;
+\Repeat{\(\max_z\mathrm{win}_F(z)\le0\)}{
+  \(M\gets\) Prim on \(F\); compute \(s_{xy}\) = heaviest edge on the \(M\)-path between \(x,y\), for all pairs\;
+  \(z^\ast\gets\arg\max_z\mathrm{win}_F(z)\), using \cref{lem:gain} and lazy evaluation of \(d(z)\)\;
+  \lIf{\(\mathrm{win}_F(z^\ast)>0\)}{\(F\gets F[z^\ast]\); \(Z\gets Z\cup\{z^\ast\}\)}
+}
+\(H\gets\) stars of all \(z\in Z\) \(\cup\) shortest paths of the non-zero edges of \(\mathrm{MST}(F)\)\;
+\Return \textsc{Clean-Up}\((H)\)\;
+\caption{G3 (\texttt{src/greedy3\_zelikovsky.cpp}).}
+\end{algorithm}
+
+\begin{lemma}\label{lem:gain}
+Let \(M\) be an MST of \(F\), and let \(s_{ab},s_{bc},s_{ac}\) be the heaviest edge weights on the \(M\)-paths between the three
+pairs. Then \(w(\mathrm{MST}(F))-w(\mathrm{MST}(F[z]))=\max(s_{ab},s_{bc},s_{ac})+\min(s_{ab},s_{bc},s_{ac})\).
+\end{lemma}
+\begin{proof}
+The three \(M\)-paths form a subtree shaped like a Y with centre \(o\) (one leg may be empty). Let \(\mu_a,\mu_b,\mu_c\) be the
+heaviest weights on the legs from \(o\) to \(a,b,c\) (0 for an empty leg). Joining \(a,b,c\) by zero edges is the same as
+contracting them into one node, which turns the Y into two independent cycles through \(o\). An MST of \(F[z]\) is obtained from
+\(M\) plus the zero edges by deleting one edge on each cycle, and the two deleted edges must lie on two different legs (deleting
+two edges of one leg disconnects the part between them). The best choice deletes the heaviest edge of each of the two legs with the
+largest maxima, saving the sum of the two largest of \(\mu_a,\mu_b,\mu_c\). Since \(s_{ab}=\max(\mu_a,\mu_b)\) and similarly for the
+other pairs, if \(\mu_a\ge\mu_b\ge\mu_c\) the three values are \(\mu_a,\mu_b,\mu_a\), and max plus min is \(\mu_a+\mu_b\). The other
+orders are symmetric.
+\end{proof}
+
+\paragraph{Running time.} \(k\) Dijkstra runs cost \(O(k(m+n\log n))\). Each round costs \(O(k^2)\) for Prim on the heap and for the
+\(s\) matrix (one traversal of \(M\) per terminal), \(O(k^3)\) to scan the triples with \cref{lem:gain}, and \(O(n)\) per centre that
+has to be computed. Every accepted triple merges three components into one, so there are at most \((k-1)/2\) rounds, and the total
+is \(O(k(m+n\log n)+k^4+k^3n)\). In practice few centres are computed: a triple is skipped when its MST saving alone cannot beat the
+best win so far, or when it cannot beat it even with the lower bound \(d(z)\ge(D_{ab}+D_{bc}+D_{ac})/2\) (each leg of the star lies on two of
+the three pairwise paths). On \texttt{b18} (\(k=50\)) the code scans \val{g3.b18.scanned} triples and computes \val{g3.b18.centres} centres.
+
+\begin{theorem}[Zelikovsky 1993]\label{thm:zel}
+G3 returns a tree of cost at most \(w(\mathrm{MST}(D))\le(2-2/\ell)\OPT\), and at most \(\tfrac{11}{6}\OPT\).
+\end{theorem}
+\begin{proof}[Proof of the first bound and outline of the second]
+Write \(C(F,Z)=w(\mathrm{MST}(F))+\sum_{z\in Z}d(z)\). At the start \(C=w(\mathrm{MST}(D))\), and each accepted triple lowers \(C\)
+by its win, which is positive. The final \(H\) costs at most \(C\) and \cref{lem:cleanup} keeps it there, so the output costs at most
+\(w(\mathrm{MST}(D))\). For \(11/6\), Zelikovsky decomposes an optimal tree into full components and shows that a best 3-restricted
+Steiner tree, \(\mathrm{smt}_3\), costs at most \(\tfrac53\OPT\). A charging argument over the triples of that tree then shows that
+the greedy choice of the best-win triple gives
+\(\mathrm{cost}\le\tfrac12\big(w(\mathrm{MST}(D))+\mathrm{smt}_3\big)\le\tfrac12\big(2+\tfrac53\big)\OPT=\tfrac{11}{6}\OPT\).
+The full proof is in \cite{zel93}; we do not reproduce it.
+\end{proof}
+\noindent The best known polynomial ratio is \(\ln4+\varepsilon\approx1.39\) \cite{bgrs}; it needs an LP solver, which the
+assignment rules out.
+
+\subsection{Counterexamples}\label{sec:counter}
+\paragraph{A tight family for G1 and G2.}
+Take a Steiner vertex \(c\) joined to \(\ell\) terminals by edges of weight 10, and join every pair of terminals by an edge of
+weight 19 (\cref{fig:star}). The star costs \(10\ell\) and is optimal. Every terminal pair is at distance \(19<20\), so \(D\)
+is the uniform 19-clique; G1 and G2 both build a path of \(\ell-1\) direct edges, and the clean-up keeps it because \(c\) is never
+reached. Their cost is \(19(\ell-1)\), a ratio of \(1.9(1-1/\ell)\), which approaches the bound \(2-2/\ell\) of
+\cref{thm:kmb,thm:sph} as \(19/10\) is replaced by \((2w-1)/w\) with larger \(w\). G3 is optimal on the whole family: every triple has
+win \(2\cdot19-30=8>0\), so G3 contracts triples through \(c\), \(c\) enters \(H\), and the clean-up's MST then finds the star.
+\Cref{tab:star} gives the measured costs; they match the formulas exactly.
+
+\begin{figure}[H]\centering
+\begin{minipage}{0.36\linewidth}\centering
+\begin{tikzpicture}[scale=1.05]
+\foreach \i in {1,...,6}{\node[circle,draw,fill=accent,text=white,inner sep=1.5pt,font=\scriptsize] (t\i) at ({60*\i}:1.6) {\(t_\i\)};}
+\node[circle,draw,inner sep=1.5pt,font=\scriptsize] (c) at (0,0) {\(c\)};
+\foreach \i in {1,...,6}{\draw[thick,cG3] (c) -- node[font=\tiny,fill=white,inner sep=0.5pt]{10} (t\i);}
+\foreach \i/\j in {1/2,2/3,3/4,4/5,5/6,6/1,1/3,2/4,3/5,4/6,5/1,6/2,1/4,2/5,3/6}{\draw[black!25] (t\i) -- (t\j);}
+\foreach \i/\j in {1/2,2/3,3/4,4/5,5/6}{\draw[very thick,cG1,dashed] (t\i) -- (t\j);}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.6\linewidth}
+\input{generated/star_table.tex}
+\end{minipage}
+\caption{Left: the gadget for \(\ell=6\). Grey edges have weight 19. The dashed path is what G1 and G2 return (cost 95); the star
+through \(c\) is optimal (cost 60) and is what G3 returns. Right: measured costs for \(\ell=3,\dots,12\).}\label{fig:star}
+\end{figure}
+
+\paragraph{Instances found by search.}
+For G3 the star family is no counterexample, and the theorem gives no tight family that is easy to write down. So
+\texttt{scripts/gen\_instances.py} searches for one. It starts from small random graphs (7 to 9 vertices, 4 or 5 terminals) and
+hill-climbs on edge weights, edges and the terminal set to maximise \(\mathrm{cost}(\mathrm{G}x)/\OPT\), with \(\OPT\) from the
+dynamic program, accepting ties so it can cross plateaus. It then deletes edges as long as the ratio does not drop, so that the
+graphs stay small enough to draw. Six restarts per strategy, all seeded. \Cref{fig:gadgets} shows the worst instance found
+for each strategy. The search found nothing above 1.4 on graphs this small, far from the proven bounds: those bounds need many leaves,
+and a 4- or 5-terminal tree has few.
+
+\input{generated/gadgets.tex}
+
+\subsection{Optimality gaps on the benchmark}\label{sec:gaps}
+\Cref{tab:gaps} compares the three strategies on every instance with a known optimum (published for SteinLib, from the dynamic
+program for the generated sets). The gap is \((\mathrm{cost}-\OPT)/\OPT\).
+
+\input{generated/greedy_gaps.tex}
+
+\noindent First, all three are far better on the benchmarks than their worst case: the largest gap on a SteinLib instance is
+\val{gap.max.steinlib}\%, nowhere near a ratio of \(11/6\) or \(2\); the gaps of 50--74\% appear only on the adversarial set, which was built to
+cause them. Second, no strategy wins everywhere. G3 has the smallest mean gap overall (\val{g3.meangap}\%) because it is the only one that
+stays close to the optimum on the adversarial instances and on I080, whose incidence weights punish pairwise path joins. G2 has the
+smallest gap on B, C, grids and random graphs. Third, G2 pays for that with time: it runs the heuristic once per terminal, which makes it
+the slowest greedy strategy by an order of magnitude (\val{time.C.G2}\,s per C instance on average, against \val{time.C.G3}\,s for G3 and \val{time.C.G1}\,s for G1). With a single root
+it is much weaker, and its worst root is more expensive than G1 on \val{sph.worse_than_g1} of \val{gap.count} instances
+(\cref{tab:sphroots}). The choice of root is part of the greedy decision, and a bad one costs as much as the difference between G1 and G2.
+
+\input{generated/sph_roots.tex}

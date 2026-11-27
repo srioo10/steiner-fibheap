@@ -1,0 +1,39 @@
+% ------------------------------------------------------------------ 7
+\section{Experimental setup and overall results}\label{sec:experiments}
+
+\paragraph{Machine and build.} \val{env.cpu}, \val{env.cores} logical cores, \val{env.mem}\,GB RAM, \val{env.os}; \val{env.gxx},
+flags \texttt{-std=c++17 -O2 -march=native}. The main table ran six solver processes in parallel
+(\texttt{scripts/run\_bench.sh}); the heap comparison of \cref{sec:ablation} ran one process at a time and keeps the best of three
+runs, because it compares times. The exact solvers have a 300\,s limit per instance.
+
+\paragraph{Instances.} SteinLib sets B (18 sparse random graphs, \(n\le100\)), C (20 graphs with \(n=500\), up to \(12{,}500\) edges and
+\(k\) up to 250), P6E (15 Euclidean-weight graphs, \(n=100\)) and I080 (100 graphs with \(n=80\) and Duin's incidence weights, which
+are designed to make reduction tests ineffective), all with published optima. The generated sets are the adversarial instances of \cref{sec:counter}, 27 grids
+(\(10\times10\), \(k=4,6,\dots,20\), three each) and six sparse random graphs with \(n\) from 100 to 3200 and \(k=10\). In total
+\val{inst.total} instances and \val{rows.total} solver runs.
+
+\paragraph{Correctness checks.} Every tree any solver returns passes through the validator in \texttt{include/graph.hpp},
+which is separate from all solvers: edge ids valid and distinct, no cycle, connected, all terminals spanned, and the cost recomputed from
+the input. No run failed this check. \texttt{scripts/make\_tables.py} also refuses to build the report if any greedy cost is below the
+known optimum, or if an exact solver that claims optimality differs from it. All \val{exact.checked} exact SteinLib results agree with the
+published optima, and on the generated sets the DP and the branch-and-bound, two unrelated algorithms,
+agree with each other.
+
+\input{generated/overview.tex}
+
+\subsection{Fibonacci heap against binary heap}\label{sec:ablation}
+\input{generated/ablation.tex}
+\input{sections/ablation_text.tex}
+
+\section{Limitations}\label{sec:limits}
+\begin{itemize}
+\item The DP is limited to \(k\le20\) by time and memory (\cref{thm:dpcost}). A meet-in-the-middle or the Nederlof
+inclusion--exclusion variant would trade time for polynomial space, but would no longer use the heap.
+\item The branch-and-bound has no LP solver, so its bound is the dual ascent value, which is weaker than the LP optimum on some dense
+graphs. The instances left open in \cref{tab:bnb} are those where the root gap stays large; LP-based branch-and-cut solvers such as
+SCIP-Jack are the standard tool for them.
+\item The search for adversarial instances only covers graphs with at most 9 vertices. It shows that each greedy strategy can be
+suboptimal, not how bad it can be: the ratios found (at most \val{adv.g1.ratio}) are far from the proven bounds.
+\item Times are wall-clock times on one machine, measured inside each process from after the input is read until the solver returns its tree;
+runs in the main table shared the machine with five others.
+\end{itemize}

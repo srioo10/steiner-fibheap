@@ -1,0 +1,109 @@
+% ------------------------------------------------------------------ 6
+\section{Exact paradigm 2: branch-and-bound}\label{sec:bnb}
+
+The DP is exponential in \(k\) and useless beyond \(k\approx20\). Branch-and-bound is exponential in the number of branching
+decisions instead, so it helps when a good lower bound settles most decisions before any branching happens. Our design follows the
+structure of the strongest exact Steiner solvers (Koch and Martin 1998; Polzin and Vahdati Daneshmand 2001), cut down to what can be
+written without an LP solver: exact graph reductions, a dual ascent lower bound, a heuristic upper bound, reduced-cost
+elimination, and best-first branching on Steiner vertices.
+
+\subsection{Search space and branching}
+A search node fixes some non-terminals as \emph{included} (they become terminals) and some vertices and edges as \emph{excluded}
+(they are deleted). Branching on a free non-terminal \(v\) creates two children, \(v\) included and \(v\) excluded. Every Steiner tree
+either contains \(v\) or does not, so the two children together keep every feasible tree. Each branching fixes one vertex, so every
+root-to-leaf path has at most \(n-k\) branchings, and the search tree is finite with at most \(2^{n-k+1}\) nodes. We branch on the free
+non-terminal with the smallest \(d'(r,v)+d'(v,T)\) (defined in \cref{sec:elim}): the vertex that the dual solution considers cheapest
+to use, which is most likely in an optimal tree and therefore tightens the bound quickly in the excluding child.
+
+Open nodes wait in a Fibonacci heap keyed by their lower bound, and the node with the smallest bound is expanded next
+(best-first search). The minimum key is a global lower bound on \(\OPT\): as soon as it reaches the incumbent cost \(U\) the search
+stops with a proof of optimality.
+
+\subsection{Exact reductions}
+Before the search the graph is reduced. All four tests keep at least one optimal tree.
+
+\begin{lemma}\label{lem:reductions}
+Let \(k\ge2\). (R1) A non-terminal of degree at most 1 lies in no optimal tree with only terminal leaves; delete it.
+(R2) If a terminal \(t\) has a single edge \(\{t,u\}\), that edge is in every feasible tree; add \(w(t,u)\) to a fixed cost, delete \(t\)
+and make \(u\) a terminal. (R3) If a non-terminal \(v\) has exactly two edges \(\{a,v\},\{v,b\}\), replace them by one edge
+\(\{a,b\}\) of weight \(w(a,v)+w(v,b)\), keeping the cheaper one if \(\{a,b\}\) already exists. (R4) Every edge with
+\(w(u,v)>d(u,v)\) can be deleted, all at once.
+\end{lemma}
+\begin{proof}
+(R1) A non-terminal leaf can be pruned without raising the cost. (R2) \(t\) must be connected to another terminal, and its only
+edge is the only way. (R3) In a tree with only terminal leaves, \(v\) either does not appear or has degree 2 and uses both edges, which
+is exactly the new edge; if a cheaper parallel edge exists, any tree using the path can switch to it. (R4) If a tree uses
+\(\{u,v\}\), replace that edge by a shortest \(u\)--\(v\) path. The result is connected, spans \(T\) and is strictly cheaper, so the
+edge is in no optimal tree. Edges that are strictly longer than the distance between their ends lie on no shortest path at all, so
+deleting them changes no distance and the argument holds for all of them together.
+\end{proof}
+\noindent R1--R3 run until nothing changes, then R4 (one Dijkstra per vertex), and the whole cycle repeats while anything changes.
+Each reduced edge remembers the list of original edges it stands for, so the final tree is mapped back to the input graph and checked
+there.
+
+\subsection{Lower bound: dual ascent on the cut formulation}
+Orient the problem from the root: replace each edge by two opposite arcs of the same weight. A Steiner tree oriented away from \(r\) is
+an arborescence \(A\), and \(x=\chi^{A}\) satisfies
+\[\min\ \sum_{a}c_a x_a\quad\text{s.t.}\quad x(\delta^-(W))\ge1\ \ \text{for all }W\subseteq V,\ r\notin W,\ W\cap T\neq\emptyset,\qquad x\ge0, \tag{P}\]
+where \(\delta^-(W)\) is the set of arcs entering \(W\). The dual is
+\[\max\ \sum_W y_W\quad\text{s.t.}\quad \sum_{W:\,a\in\delta^-(W)}y_W\le c_a\ \ \text{for all arcs }a,\qquad y\ge0. \tag{D}\]
+
+\begin{lemma}[admissibility]\label{lem:lb}
+For a dual-feasible \(y\) with reduced costs \(c'_a=c_a-\sum_{W:a\in\delta^-(W)}y_W\ge0\), every Steiner arborescence \(A\) satisfies
+\(c(A)\ge\sum_W y_W+c'(A)\). In particular \(\mathrm{LB}=\sum_Wy_W\le\OPT\).
+\end{lemma}
+\begin{proof}
+\(c(A)=\sum_{a\in A}c'_a+\sum_{a\in A}\sum_{W:a\in\delta^-(W)}y_W=c'(A)+\sum_W y_W\,|A\cap\delta^-(W)|\), and
+\(|A\cap\delta^-(W)|\ge1\) because \(A\) contains a path from \(r\notin W\) to a terminal in \(W\).
+\end{proof}
+
+Wong's dual ascent builds such a \(y\) greedily. For an active terminal \(t\), let \(W(t)\) be the set of vertices that reach \(t\)
+through arcs of reduced cost 0. While \(r\notin W(t)\), raise \(y_{W(t)}\) by the smallest reduced cost on an arc entering \(W(t)\);
+that arc becomes saturated (\(c'=0\)), its tail joins \(W(t)\), and the bound grows by the same amount. Reduced costs never go
+negative, so \(y\) stays feasible and \cref{lem:lb} applies at every moment. Our implementation grows one component at a time and keeps
+the arcs entering \(W(t)\) in a Fibonacci heap. Raising \(y\) by \(\delta\) lowers every entering arc by \(\delta\), so instead of
+touching them it adds \(\delta\) to an offset \(Y\) and keys each arc by its reduced cost plus the value of \(Y\) when it entered the heap:
+the heap minimum is always the next arc to saturate. A component stops growing when it reaches \(r\) or another active terminal
+(that terminal will connect both). Each growth step saturates one arc and arcs never unsaturate, so a call makes at most \(2m\) steps
+per terminal, \(O(km\log m)\) in total. At the root node the ascent is repeated from up to 16 different root terminals and the best bound
+is kept.
+
+\subsection{Upper bound and reduced-cost elimination}\label{sec:elim}
+At every node the shortest-path heuristic (\cref{sec:greedy}, G2) runs on the node graph and on the subgraph of arcs with reduced cost
+0. That subgraph connects every terminal to \(r\), and trees inside it tend to be cheap because the dual has already paid for those
+arcs. At the root it runs from up to 64 start terminals. The best tree is then improved by local search on its vertex set (try deleting
+each Steiner vertex and adding each neighbouring vertex, recompute the MST, keep improvements). This search runs at the root, on every
+node whose heuristic beats the incumbent, and on every 64th node.
+
+\begin{lemma}[reduced-cost elimination]\label{lem:elim}
+Let \(d'(x,y)\) be the shortest-path distance under the reduced costs \(c'\), \(d'(v,T)=\min_{t\in T}d'(v,t)\), and \(U\) the cost of
+the incumbent. A non-terminal \(v\) with \(\mathrm{LB}+d'(r,v)+d'(v,T)\ge U\) lies in no tree cheaper than \(U\). An arc
+\((u,v)\) with \(\mathrm{LB}+d'(r,u)+c'_{uv}+d'(v,T)\ge U\) lies in no arborescence cheaper than \(U\).
+\end{lemma}
+\begin{proof}
+Let \(A\) be an arborescence with only terminal leaves that contains \(v\). It contains a path from \(r\) to \(v\) and, below \(v\), a path
+from \(v\) to a terminal; the two share no arc. Since \(c'\ge0\), \(c'(A)\ge d'(r,v)+d'(v,T)\), and \cref{lem:lb} gives
+\(c(A)\ge\mathrm{LB}+d'(r,v)+d'(v,T)\ge U\). The arc case is the same with the path \(r\to u\to v\to T\). An edge is deleted when
+both of its arcs fail the test.
+\end{proof}
+\noindent Both \(d'\) are one Dijkstra run on the heap (from \(r\), and backwards from all terminals). The deletions are valid for the
+whole subtree of the node, because \(U\) can only decrease, so children inherit them.
+
+\begin{theorem}\label{thm:bnb}
+If the search ends before the limits, the incumbent is optimal.
+\end{theorem}
+\begin{proof}
+Invariant: either the incumbent is optimal, or some optimal tree is feasible for an open node. It holds at the start, and it is kept by
+branching (the children partition the trees of the parent), by the reductions (\cref{lem:reductions}) and by the eliminations
+(\cref{lem:elim}), which only remove trees that cost at least \(U\). A node is discarded only when \(\mathrm{LB}\ge U\), and by
+\cref{lem:lb} it then holds no tree cheaper than \(U\). When the heap is empty, or its smallest key is at least \(U\), no open node can
+hold a cheaper tree, so the incumbent is optimal. Weights are integers, so \(\mathrm{LB}\) is an integer and the comparison is exact.
+\end{proof}
+
+\paragraph{Complexity.} One node costs \(O(m)\) to build, \(O(km\log m)\) for the dual ascent, \(O(k(m+n\log n))\) for each heuristic run,
+\(O(m+n\log n)\) for the two reduced-cost Dijkstra runs and \(O(n(m+n\log n))\) per local search pass when it runs. The number of nodes is
+at most \(2^{n-k+1}\) in the worst case, so the worst-case running time is exponential, as it must be unless P\,=\,NP. The
+measurements below show how far below that bound the search stays.
+
+\subsection{Results}
+\input{generated/bnb_results.tex}

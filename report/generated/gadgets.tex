@@ -1,0 +1,79 @@
+\begin{figure}[H]\centering
+\begin{subfigure}{0.32\linewidth}\centering\begin{tikzpicture}[scale=1.25]
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v0) at (90.0:1.35) {1};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v1) at (141.4:1.35) {2};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v2) at (192.9:1.35) {3};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v3) at (244.3:1.35) {4};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v4) at (295.7:1.35) {5};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v5) at (347.1:1.35) {6};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v6) at (398.6:1.35) {7};
+\draw[black!30] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{12} (v1);
+\draw[cG1,thick,dashed] (v0) -- (v1);
+\draw[line width=2.6pt,cG3!45] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{4} (v2);
+\draw[line width=2.6pt,cG3!45] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{3} (v3);
+\draw[cG1,thick,dashed] (v0) -- (v3);
+\draw[line width=2.6pt,cG3!45] (v2) -- node[font=\tiny,fill=white,inner sep=0.4pt]{10} (v4);
+\draw[line width=2.6pt,cG3!45] (v1) -- node[font=\tiny,fill=white,inner sep=0.4pt]{5} (v6);
+\draw[cG1,thick,dashed] (v1) -- (v6);
+\draw[black!30] (v4) -- node[font=\tiny,fill=white,inner sep=0.4pt]{17} (v5);
+\draw[cG1,thick,dashed] (v4) -- (v5);
+\draw[line width=2.6pt,cG3!45] (v2) -- node[font=\tiny,fill=white,inner sep=0.4pt]{3} (v6);
+\draw[line width=2.6pt,cG3!45] (v5) -- node[font=\tiny,fill=white,inner sep=0.4pt]{5} (v6);
+\draw[cG1,thick,dashed] (v5) -- (v6);
+\end{tikzpicture}
+\caption{G1: cost 42, OPT 30, ratio 1.400.}\end{subfigure}\hfill
+\begin{subfigure}{0.32\linewidth}\centering\begin{tikzpicture}[scale=1.25]
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v0) at (90.0:1.35) {1};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v1) at (135.0:1.35) {2};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v2) at (180.0:1.35) {3};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v3) at (225.0:1.35) {4};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v4) at (270.0:1.35) {5};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v5) at (315.0:1.35) {6};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v6) at (360.0:1.35) {7};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v7) at (405.0:1.35) {8};
+\draw[line width=2.6pt,cG3!45] (v3) -- node[font=\tiny,fill=white,inner sep=0.4pt]{10} (v6);
+\draw[black!30] (v4) -- node[font=\tiny,fill=white,inner sep=0.4pt]{18} (v6);
+\draw[cG1,thick,dashed] (v4) -- (v6);
+\draw[line width=2.6pt,cG3!45] (v6) -- node[font=\tiny,fill=white,inner sep=0.4pt]{1} (v7);
+\draw[cG1,thick,dashed] (v6) -- (v7);
+\draw[line width=2.6pt,cG3!45] (v2) -- node[font=\tiny,fill=white,inner sep=0.4pt]{18} (v3);
+\draw[black!30] (v2) -- node[font=\tiny,fill=white,inner sep=0.4pt]{9} (v4);
+\draw[cG1,thick,dashed] (v2) -- (v4);
+\draw[line width=2.6pt,cG3!45] (v3) -- node[font=\tiny,fill=white,inner sep=0.4pt]{10} (v5);
+\draw[line width=2.6pt,cG3!45] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{10} (v3);
+\draw[black!30] (v5) -- node[font=\tiny,fill=white,inner sep=0.4pt]{20} (v6);
+\draw[cG1,thick,dashed] (v5) -- (v6);
+\draw[black!30] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{20} (v7);
+\draw[cG1,thick,dashed] (v0) -- (v7);
+\draw[black!30] (v1) -- node[font=\tiny,fill=white,inner sep=0.4pt]{6} (v7);
+\end{tikzpicture}
+\caption{G2: cost 68, OPT 49, ratio 1.388.}\end{subfigure}\hfill
+\begin{subfigure}{0.32\linewidth}\centering\begin{tikzpicture}[scale=1.25]
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v0) at (90.0:1.35) {1};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v1) at (130.0:1.35) {2};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v2) at (170.0:1.35) {3};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v3) at (210.0:1.35) {4};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v4) at (250.0:1.35) {5};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v5) at (290.0:1.35) {6};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v6) at (330.0:1.35) {7};
+\node[circle,draw,fill=accent,text=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v7) at (370.0:1.35) {8};
+\node[circle,draw,fill=white,inner sep=1pt,minimum size=4.6mm,font=\scriptsize] (v8) at (410.0:1.35) {9};
+\draw[line width=2.6pt,cG3!45] (v4) -- node[font=\tiny,fill=white,inner sep=0.4pt]{1} (v7);
+\draw[cG1,thick,dashed] (v4) -- (v7);
+\draw[black!30] (v1) -- node[font=\tiny,fill=white,inner sep=0.4pt]{11} (v7);
+\draw[cG1,thick,dashed] (v1) -- (v7);
+\draw[line width=2.6pt,cG3!45] (v5) -- node[font=\tiny,fill=white,inner sep=0.4pt]{1} (v6);
+\draw[cG1,thick,dashed] (v5) -- (v6);
+\draw[line width=2.6pt,cG3!45] (v3) -- node[font=\tiny,fill=white,inner sep=0.4pt]{14} (v5);
+\draw[line width=2.6pt,cG3!45] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{11} (v6);
+\draw[cG1,thick,dashed] (v0) -- (v6);
+\draw[line width=2.6pt,cG3!45] (v6) -- node[font=\tiny,fill=white,inner sep=0.4pt]{10} (v7);
+\draw[cG1,thick,dashed] (v6) -- (v7);
+\draw[black!30] (v1) -- node[font=\tiny,fill=white,inner sep=0.4pt]{13} (v3);
+\draw[cG1,thick,dashed] (v1) -- (v3);
+\draw[line width=2.6pt,cG3!45] (v2) -- node[font=\tiny,fill=white,inner sep=0.4pt]{11} (v5);
+\draw[cG1,thick,dashed] (v2) -- (v5);
+\draw[black!30] (v0) -- node[font=\tiny,fill=white,inner sep=0.4pt]{13} (v8);
+\end{tikzpicture}
+\caption{G3: cost 58, OPT 48, ratio 1.208.}\end{subfigure}
+\caption{Worst instances found by the search, one per strategy. Filled vertices are terminals. The wide light band marks an optimal tree (from the DP); the dashed line is the tree the greedy strategy returns. Numbers on edges are weights.}\label{fig:gadgets}\end{figure}

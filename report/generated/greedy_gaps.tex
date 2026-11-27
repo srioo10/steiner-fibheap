@@ -1,0 +1,16 @@
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lrrrrrrrrrrrrr@{}}\toprule
+ & & \multicolumn{4}{c}{G1 KMB} & \multicolumn{4}{c}{G2 SPH (best root)} & \multicolumn{4}{c}{G3 Zelikovsky}\\
+\cmidrule(lr){3-6}\cmidrule(lr){7-10}\cmidrule(l){11-14}
+Set & \# & mean & max & opt & ms & mean & max & opt & ms & mean & max & opt & ms\\\midrule
+B & 18 & 2.38 & 6.30 & 7 & 1.0 & \textbf{0.18} & 1.64 & 15 & 11.3 & 0.65 & 4.72 & 12 & 1.5\\
+C & 20 & 5.36 & 15.62 & 1 & 26.1 & \textbf{1.99} & 9.09 & 5 & 1703.0 & 2.33 & 9.09 & 3 & 153.9\\
+P6E & 15 & 2.77 & 8.96 & 2 & 1.5 & 0.36 & 3.49 & 10 & 39.1 & \textbf{0.09} & 1.27 & 13 & 1.9\\
+I080 & 100 & 18.51 & 41.03 & 1 & 0.6 & 10.73 & 41.03 & 13 & 6.5 & \textbf{8.14} & 20.48 & 3 & 0.9\\
+Grid & 27 & 2.89 & 9.41 & 6 & 0.5 & \textbf{0.54} & 2.68 & 17 & 2.4 & 0.57 & 2.72 & 17 & 0.6\\
+Random & 6 & 7.95 & 14.27 & 0 & 4.5 & \textbf{1.03} & 2.04 & 1 & 22.1 & 2.42 & 5.30 & 0 & 4.6\\
+Adversarial & 13 & 50.48 & 74.17 & 1 & 0.1 & 48.78 & 74.17 & 2 & 0.2 & \textbf{1.60} & 20.83 & 12 & 0.1\\
+\midrule All & 199 & 14.19 & 74.17 & 18 & 3.3 & 8.93 & 74.17 & 63 & 179.4 & 4.65 & 20.83 & 60 & 16.4\\
+\bottomrule\end{tabular}
+\caption{Gap to the optimum in percent (mean and maximum), number of instances solved optimally, and mean time in milliseconds. Bold: smallest mean gap in the row.}\label{tab:gaps}
+\end{table}

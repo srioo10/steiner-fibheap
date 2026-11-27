@@ -1,0 +1,11 @@
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lrrrrrrrrr@{}}\toprule
+Solver & runs & \textsc{Insert} & \textsc{Extr.-Min} & \textsc{Decr.-Key} & links & cuts & actual & bound & ratio\\\midrule
+G1 & 199 & 1.2M & 1.2M & 0.6M & 5.0M & 0.16M & 17.8M & 50.2M & 0.35\\
+G2 & 199 & 139.9M & 74.2M & 68.6M & 417.2M & 22.51M & 1380.2M & 3345.5M & 0.41\\
+G3 & 199 & 1.3M & 1.3M & 0.9M & 5.3M & 0.26M & 18.9M & 53.9M & 0.35\\
+DP & 174 & 1643.5M & 1643.5M & 788.0M & 5957.1M & 165.95M & 21044.4M & 53813.1M & 0.39\\
+B\&B & 199 & 1708.3M & 868.2M & 493.8M & 4450.4M & 132.18M & 14744.0M & 60317.1M & 0.24\\
+\bottomrule\end{tabular}
+\caption{Heap work summed over all runs of the main benchmark (M = million). \emph{actual} is the measured cost in the units of \cref{sec:amortized}; \emph{bound} is \(2\,\#\textsc{Insert}+(3D(N)+1)\,\#\textsc{Extract-Min}+5\,\#\textsc{Decrease-Key}\) from \cref{thm:sequence}, with \(N\) the largest possible heap of the run. For B\&B the counts cover the vertex queue and the open-node queue. On these sparse benchmark graphs there are fewer decrease-keys than extract-mins in every solver; \cref{sec:ablation} shows what this means for running time.}\label{tab:heapcounts}
+\end{table}

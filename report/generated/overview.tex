@@ -1,0 +1,11 @@
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}llrrrr@{}}\toprule
+Solver & Paradigm & runs & optimal & mean gap (\%) & total time (s)\\\midrule
+G1 & greedy & 199 & 18 & 14.195 & 0.7\\
+G2 & greedy & 199 & 63 & 8.927 & 35.7\\
+G3 & greedy & 199 & 60 & 4.646 & 3.3\\
+DP & dynamic programming & 173 & 173 & 0.000 & 4617.3\\
+B\&B & branch-and-bound & 199 & 198 & 0.018 & 379.3\\
+\bottomrule\end{tabular}
+\caption{All instances with a known optimum (199). \emph{runs}: runs that returned a tree (the DP skips \(k>20\)). For the exact methods a non-zero mean gap comes only from instances stopped at the time limit.}\label{tab:overview}
+\end{table}

@@ -1,0 +1,187 @@
+% ------------------------------------------------------------------ 2
+\section{The data structure: a Fibonacci heap}\label{sec:heap}
+
+\subsection{Why this structure}
+The state that all five algorithms manage is a set of tentative labels (a distance, a key in Prim, a lower bound
+in branch-and-bound) from which the smallest is removed again and again, while other labels only go down. The
+number of label decreases is much larger than the number of removals: Dijkstra removes each vertex once but may
+lower a label once per edge. In the dynamic program of \cref{sec:dp} the grow step runs Dijkstra from
+\(n\) sources at once on every one of \(2^{k-1}\) layers, so a single solve performs millions of
+\textsc{Decrease-Key} calls (\cref{tab:heapcounts}). The Fibonacci heap is built for exactly this ratio: it makes
+\textsc{Decrease-Key} \(O(1)\) amortized by postponing all restructuring to \textsc{Extract-Min}.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lccccc@{}}\toprule
+Operation & Binary heap & Binomial heap & Pairing heap & \multicolumn{2}{c}{Fibonacci heap}\\
+ & worst & worst & amortized & worst & amortized\\\midrule
+\textsc{Make-Heap}, \textsc{Minimum} & \(O(1)\) & \(O(1)\) & \(O(1)\) & \(O(1)\) & \(O(1)\)\\
+\textsc{Insert} & \(O(\log n)\) & \(O(\log n)\) & \(O(1)\) & \(O(1)\) & \(O(1)\)\\
+\textsc{Union} & \(O(n)\) & \(O(\log n)\) & \(O(1)\) & \(O(1)\) & \(O(1)\)\\
+\textsc{Extract-Min} & \(O(\log n)\) & \(O(\log n)\) & \(O(\log n)\) & \(O(n)\) & \(O(\log n)\)\\
+\textsc{Decrease-Key} & \(O(\log n)\) & \(O(\log n)\) & \(o(\log n)\)\textsuperscript{a} & \(O(n)\)\textsuperscript{b} & \(O(1)\)\\
+\textsc{Delete} & \(O(\log n)\) & \(O(\log n)\) & \(O(\log n)\) & \(O(n)\) & \(O(\log n)\)\\\midrule
+Dijkstra, \(n\) vertices, \(m\) edges & \(O(m\log n)\) & \(O(m\log n)\) & \(o(m\log n)\) & & \(O(m+n\log n)\)\\\bottomrule
+\end{tabular}
+\caption{Priority queues compared. \textsuperscript{a}The exact amortized bound for pairing heaps is open;
+\(O(1)\) is impossible in the standard model (Fredman, 1999). \textsuperscript{b}A cascade of cuts can follow a path
+as long as the tallest tree, which can reach \(\Theta(n)\).}\label{tab:pq}
+\end{table}
+
+The Fibonacci heap is the only structure in the table that gives Dijkstra and Prim the
+\(O(m+n\log n)\) bound, and that bound is what the complexity results of \cref{sec:greedy,sec:dp} rest on.
+\Cref{sec:ablation} measures whether the asymptotic advantage turns into wall-clock time on our instances.
+
+\subsection{Representation}
+A Fibonacci heap is a collection of heap-ordered rooted trees. Each node \(x\) stores
+\texttt{key}, \texttt{item} (the payload: a vertex or a search-node id), \texttt{parent}, \texttt{child} (any one
+child), \texttt{left}/\texttt{right} (siblings in a circular doubly linked list), \texttt{degree} (number of
+children) and a boolean \texttt{mark}. The roots form the \emph{root list}, another circular list, and the heap keeps a
+pointer \texttt{min} to the root with the smallest key, together with \(n\) (number of nodes), \(t(H)\) (number of roots) and
+\(m(H)\) (number of marked nodes). A node is marked when it has lost a child since it last became the child of another node.
+
+In \texttt{include/fib\_heap.hpp} nodes come from a chunked pool, so a handle is a stable pointer and
+\textsc{Clear} recycles the memory without freeing it; the dynamic program calls \textsc{Clear} once per subset layer
+instead of allocating \(n\) new nodes. The class \texttt{FibPQ} wraps the heap for graph algorithms: it keeps one
+handle per vertex so that \textsc{Decrease-Key}\((v,k)\) can be called with a vertex id. The heap also counts its
+own work (links, cuts, cascading cuts, roots scanned, children promoted), which \cref{sec:amortized-check} uses to
+check the amortized analysis against real runs.
+
+\subsection{Abstract data type}
+\Cref{tab:adt} lists the operations. Fundamental operations are those of a mergeable min-priority queue;
+auxiliary operations are internal and are listed because the amortized analysis charges their cost separately.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}p{3.3cm}p{6.5cm}cc@{}}\toprule
+Operation & Effect & Worst case & Amortized\\\midrule
+\multicolumn{4}{@{}l}{\emph{Fundamental}}\\
+\textsc{Make-Heap}() & empty heap & \(O(1)\) & \(O(1)\)\\
+\textsc{Insert}\((H,x)\) & add node \(x\) with key \(x.\mathit{key}\) & \(O(1)\) & \(O(1)\)\\
+\textsc{Minimum}\((H)\) & node with the smallest key & \(O(1)\) & \(O(1)\)\\
+\textsc{Extract-Min}\((H)\) & remove and return the minimum & \(O(n)\) & \(O(\log n)\)\\
+\textsc{Union}\((H_1,H_2)\) & meld two heaps, \(H_2\) becomes empty & \(O(1)\) & \(O(1)\)\\
+\textsc{Decrease-Key}\((H,x,k)\) & set \(x.\mathit{key}\gets k\le x.\mathit{key}\) & \(O(n)\) & \(O(1)\)\\
+\textsc{Delete}\((H,x)\) & remove \(x\) & \(O(n)\) & \(O(\log n)\)\\[2pt]
+\multicolumn{4}{@{}l}{\emph{Auxiliary}}\\
+\textsc{Link}\((H,y,x)\) & make root \(y\) a child of root \(x\) & \(O(1)\) & --\\
+\textsc{Consolidate}\((H)\) & link roots until all root degrees differ & \(O(\Dn+t(H))\) & --\\
+\textsc{Cut}\((H,x,y)\) & move child \(x\) of \(y\) to the root list & \(O(1)\) & --\\
+\textsc{Cascading-Cut}\((H,y)\) & cut marked ancestors, mark the first unmarked one & \(O(\text{height})\) & --\\
+\textsc{Clear}\((H)\) & empty the heap, keep the node pool & \(O(1)\) & \(O(1)\)\\\bottomrule
+\end{tabular}
+\caption{The ADT implemented in \texttt{include/fib\_heap.hpp}. \(\Dn=\lfloor\log_\varphi n\rfloor\) bounds the
+degree of any node (\cref{cor:degree}).}\label{tab:adt}
+\end{table}
+
+\subsection{Pseudocode}
+The pseudocode follows the implementation line by line. One detail differs from the textbook version: when
+\textsc{Extract-Min} moves the children of the minimum to the root list it also clears their marks. A root never
+needs a mark (marks only matter for nodes that have a parent), and clearing them lowers the potential, so every bound
+below still holds.
+
+\begin{algorithm}[H]
+\Fn{\textsc{Insert}\((H,x)\)}{
+  \(x.\mathit{degree}\gets0;\ x.\mathit{parent}\gets x.\mathit{child}\gets\textsc{nil};\ x.\mathit{mark}\gets\textsc{false}\)\;
+  add \(x\) to the root list of \(H\)\;
+  \lIf{\(H.\mathit{min}=\textsc{nil}\) \textbf{or} \(x.\mathit{key}<H.\mathit{min}.\mathit{key}\)}{\(H.\mathit{min}\gets x\)}
+  \(H.n\gets H.n+1\)\;
+}
+\Fn{\textsc{Union}\((H_1,H_2)\)}{
+  splice the root list of \(H_2\) into that of \(H_1\) \tcp*{four pointer updates}
+  \lIf{\(H_2.\mathit{min}.\mathit{key}<H_1.\mathit{min}.\mathit{key}\)}{\(H_1.\mathit{min}\gets H_2.\mathit{min}\)}
+  \(H_1.n\gets H_1.n+H_2.n\); \(H_2\) becomes empty\;
+}
+\caption{\textsc{Insert} and \textsc{Union}: lazy, no restructuring.}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\Fn{\textsc{Extract-Min}\((H)\)}{
+  \(z\gets H.\mathit{min}\)\;
+  \ForEach{child \(x\) of \(z\)}{ add \(x\) to the root list; \(x.\mathit{parent}\gets\textsc{nil}\); \(x.\mathit{mark}\gets\textsc{false}\)\; }
+  remove \(z\) from the root list; \(H.n\gets H.n-1\)\;
+  \lIf{\(H.n=0\)}{\(H.\mathit{min}\gets\textsc{nil}\)}
+  \lElse{\(H.\mathit{min}\gets z.\mathit{right}\); \textsc{Consolidate}\((H)\)}
+  \Return \(z\)\;
+}
+\Fn{\textsc{Consolidate}\((H)\)}{
+  \(A[0..\Dn+1]\gets\textsc{nil}\)\;
+  \ForEach{root \(w\) in a snapshot of the root list}{
+    \(x\gets w\); \(d\gets x.\mathit{degree}\)\;
+    \While{\(A[d]\neq\textsc{nil}\)}{
+      \(y\gets A[d]\); \lIf{\(y.\mathit{key}<x.\mathit{key}\)}{swap \(x,y\)}
+      \textsc{Link}\((H,y,x)\); \(A[d]\gets\textsc{nil}\); \(d\gets d+1\)\;
+    }
+    \(A[d]\gets x\)\;
+  }
+  rebuild the root list from the non-empty entries of \(A\) and set \(H.\mathit{min}\)\;
+}
+\Fn{\textsc{Link}\((H,y,x)\)}{
+  remove \(y\) from the root list; make \(y\) a child of \(x\); \(x.\mathit{degree}\gets x.\mathit{degree}+1\); \(y.\mathit{mark}\gets\textsc{false}\)\;
+}
+\caption{\textsc{Extract-Min}: all deferred work happens here.}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\Fn{\textsc{Decrease-Key}\((H,x,k)\)}{
+  \lIf{\(k>x.\mathit{key}\)}{\textbf{error}}
+  \(x.\mathit{key}\gets k\); \(y\gets x.\mathit{parent}\)\;
+  \If{\(y\neq\textsc{nil}\) \textbf{and} \(x.\mathit{key}<y.\mathit{key}\)}{ \textsc{Cut}\((H,x,y)\); \textsc{Cascading-Cut}\((H,y)\)\; }
+  \lIf{\(x.\mathit{key}<H.\mathit{min}.\mathit{key}\)}{\(H.\mathit{min}\gets x\)}
+}
+\Fn{\textsc{Cut}\((H,x,y)\)}{
+  remove \(x\) from the child list of \(y\); \(y.\mathit{degree}\gets y.\mathit{degree}-1\)\;
+  add \(x\) to the root list; \(x.\mathit{parent}\gets\textsc{nil}\); \(x.\mathit{mark}\gets\textsc{false}\)\;
+}
+\Fn{\textsc{Cascading-Cut}\((H,y)\)}{
+  \While{\(z\gets y.\mathit{parent}\neq\textsc{nil}\)}{
+    \lIf{\(y.\mathit{mark}=\textsc{false}\)}{\(y.\mathit{mark}\gets\textsc{true}\); \textbf{return}}
+    \textsc{Cut}\((H,y,z)\); \(y\gets z\)\;
+  }
+}
+\Fn{\textsc{Delete}\((H,x)\)}{ \textsc{Decrease-Key}\((H,x,-\infty)\); \textsc{Extract-Min}\((H)\)\; }
+\caption{\textsc{Decrease-Key}, the cut rules and \textsc{Delete}. \textsc{Cascading-Cut} is written as a loop, as in the code.}
+\end{algorithm}
+
+\subsection{A worked example}
+\Cref{fig:heapex} runs \textsc{Extract-Min} and one \textsc{Decrease-Key} on a small heap. Before the extraction
+there are five roots; afterwards three, with degrees 3, 1 and 0. The decrease-key on 35 then triggers a cascading cut
+because its parent 26 is already marked.
+
+\begin{figure}[H]\centering
+\tikzset{fn/.style={circle,draw,minimum size=6.2mm,inner sep=0pt,font=\scriptsize},
+         mk/.style={fn,fill=black!70,text=white}, mn/.style={fn,very thick,draw=accent},
+         level distance=9mm, sibling distance=8mm, edge from parent/.style={draw}}
+\begin{subfigure}{\linewidth}\centering
+\begin{tikzpicture}
+\node[fn] at (0,0) {7};
+\node[mn] at (1.1,0) {3} child{node[fn]{18} child{node[fn]{39}}} child{node[fn]{52}};
+\node[fn] at (2.6,0) {17} child{node[fn]{30}};
+\node[fn] at (3.9,0) {24} child{node[mk]{26} child{node[fn]{35}}} child{node[fn]{46}};
+\node[fn] at (5.2,0) {23};
+\draw[densely dotted] (-0.4,0.45) -- (5.6,0.45) node[right,font=\scriptsize]{root list};
+\end{tikzpicture}
+\caption{Before: \(t(H)=5\), \(m(H)=1\) (26 is marked), \(\Phi=7\). The minimum 3 is outlined.}
+\end{subfigure}\\[4pt]
+\begin{subfigure}{\linewidth}\centering
+\begin{tikzpicture}[sibling distance=12mm]
+\node[mn] at (0,0) {7} child{node[fn]{23}} child{node[fn]{17} child{node[fn]{30}}}
+  child[sibling distance=14mm]{node[fn]{24} child[sibling distance=8mm]{node[mk]{26} child{node[fn]{35}}} child[sibling distance=8mm]{node[fn]{46}}};
+\node[fn] at (2.7,0) {18} child{node[fn]{39}};
+\node[fn] at (3.8,0) {52};
+\end{tikzpicture}
+\caption{After \textsc{Extract-Min}: 18 and 52 are promoted; \textsc{Consolidate} links 23, 17 and 24 under 7
+(degrees 0, 1, 2 become one tree of degree 3). \(t(H)=3\), \(\Phi=5\).}
+\end{subfigure}\\[4pt]
+\begin{subfigure}{\linewidth}\centering
+\begin{tikzpicture}[sibling distance=12mm]
+\node[fn] at (0,0) {7} child{node[fn]{23}} child{node[fn]{17} child{node[fn]{30}}}
+  child{node[mk]{24} child{node[fn]{46}}};
+\node[fn] at (2.2,0) {18} child{node[fn]{39}};
+\node[fn] at (3.2,0) {52};
+\node[mn] at (4.2,0) {5};
+\node[fn] at (5.2,0) {26};
+\end{tikzpicture}
+\caption{After \textsc{Decrease-Key}(35, 5): 35 is cut; its parent 26 was marked, so 26 is cut too (cascading cut);
+24 had not lost a child before, so it is marked and the cascade stops. Two cuts, \(\Phi\) goes from 5 to 7.}
+\end{subfigure}
+\caption{\textsc{Extract-Min} and a cascading cut on a small Fibonacci heap. Filled nodes are marked.}\label{fig:heapex}
+\end{figure}

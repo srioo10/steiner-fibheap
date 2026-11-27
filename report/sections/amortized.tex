@@ -1,0 +1,154 @@
+% ------------------------------------------------------------------ 3
+\section{Amortized analysis}\label{sec:amortized}
+
+A single \textsc{Extract-Min} can take \(\Theta(n)\) time (after \(n\) inserts the root list has \(n\) trees), and a
+single \textsc{Decrease-Key} can cut a whole path. Worst-case bounds per operation are therefore useless for
+Dijkstra. What matters is the total cost of a \emph{sequence} of operations, and that is what amortized analysis
+bounds. We use the potential method and then restate the result with the accounting and aggregate methods.
+
+\subsection{Cost model and potential function}
+Let \(D_0\) be the empty heap and \(D_i\) the heap after the \(i\)-th operation, whose actual cost is \(c_i\). For a
+potential \(\Phi\) with \(\Phi(D_0)=0\) and \(\Phi(D_i)\ge0\), the amortized cost is
+\[\hat c_i = c_i+\Phi(D_i)-\Phi(D_{i-1}),\qquad\text{so}\qquad
+\sum_{i=1}^{N}\hat c_i=\sum_{i=1}^{N}c_i+\Phi(D_N)-\Phi(D_0)\;\ge\;\sum_{i=1}^{N}c_i .\]
+The sum of amortized costs is an upper bound on the true total for every sequence.
+
+\begin{definition}[potential]\label{def:phi}
+\(\Phi(H)=t(H)+2\,m(H)\), where \(t(H)\) is the number of trees in the root list and \(m(H)\) the number of marked nodes.
+\end{definition}
+
+\noindent\(\Phi(D_0)=0\) and \(\Phi\ge0\) always. One unit of cost pays for a constant amount of pointer work. We
+charge \textsc{Insert} and \textsc{Union} one unit each; \textsc{Decrease-Key} one unit plus one per cut; and
+\textsc{Extract-Min} one unit, plus one per promoted child, plus one per root examined by \textsc{Consolidate}.
+Each \textsc{Link} and each iteration of the inner \textbf{while} loop removes one root that was examined, so
+there are at most as many of them as examined roots, and the true running time is within a constant factor of this
+count. The implementation counts exactly these units (\texttt{FibStats::actual\_cost}).
+
+\subsection{Amortized cost of each operation}
+
+\begin{lemma}[\textsc{Insert}, \textsc{Union}, \textsc{Make-Heap}, \textsc{Minimum}]\label{lem:insert}
+\(\hat c_{\textsc{Insert}}=2\), \(\hat c_{\textsc{Union}}=1\), and \(\hat c=1\) for \textsc{Make-Heap} and \textsc{Minimum}.
+\end{lemma}
+\begin{proof}
+\textsc{Insert} adds one unmarked root: \(c=1\), \(\Delta t=1\), \(\Delta m=0\), so \(\hat c=1+1=2\).
+\textsc{Union} concatenates two root lists: \(t(H_1\cup H_2)=t(H_1)+t(H_2)\) and the same holds for \(m\), so
+\(\Phi\) of the result equals \(\Phi(H_1)+\Phi(H_2)\), \(\Delta\Phi=0\) and \(\hat c=1\).
+The other two change nothing.
+\end{proof}
+
+\begin{lemma}[\textsc{Extract-Min}]\label{lem:extract}
+If the heap has \(n\) nodes and every node has degree at most \(\Dn\), then \(\hat c_{\textsc{Extract-Min}}\le 3\Dn+1\).
+\end{lemma}
+\begin{proof}
+Let \(t=t(H)\) before the call and let \(c'\le\Dn\) be the number of children of the minimum \(z\). Promoting the
+children costs \(c'\). After \(z\) is removed the root list has \(t+c'-1\) trees and \textsc{Consolidate} examines each,
+so
+\[c_i=1+c'+(t+c'-1)=2c'+t .\]
+After \textsc{Consolidate} no two roots have the same degree and every degree is in \(\{0,\dots,\Dn\}\), so at most
+\(\Dn+1\) roots remain. No node becomes marked (\textsc{Link} and the promotion only clear marks), so
+\(\Delta m\le0\) and
+\[\hat c_i\le 2c'+t+\big((\Dn+1)-t\big)=2c'+\Dn+1\le3\Dn+1. \qedhere\]
+\end{proof}
+The term \(t\) cancels: the long root list built up by lazy inserts was paid for in advance by the potential those
+inserts left behind.
+
+\begin{lemma}[\textsc{Decrease-Key}]\label{lem:decrease}
+\(\hat c_{\textsc{Decrease-Key}}\le5\).
+\end{lemma}
+\begin{proof}
+If no cut happens, \(c_i=1\) and \(\Delta\Phi=0\). Otherwise let \(c\ge1\) be the number of cuts: the cut of \(x\)
+and \(c-1\) cascading cuts. Then \(c_i=1+c\). Each cut adds one root, \(\Delta t=c\). Each cascading cut cuts a marked
+node and clears its mark, the cut of \(x\) clears its mark if it had one, and at most one node (where the cascade
+stops) becomes marked, so \(\Delta m\le 1-(c-1)=2-c\). Hence
+\[\hat c_i\le(1+c)+c+2(2-c)=5. \qedhere\]
+\end{proof}
+This is why marked nodes carry weight two in \(\Phi\): one unit pays for the cut of the node and one for the
+new root it creates.
+
+\begin{lemma}[\textsc{Delete}]\(\hat c_{\textsc{Delete}}\le 3\Dn+6\), since it is one \textsc{Decrease-Key} followed by one \textsc{Extract-Min}.\end{lemma}
+
+\subsection{Bounding the maximum degree}
+The bound \(\Dn=O(\log n)\) is what makes \cref{lem:extract} logarithmic, and it depends on the marking rule.
+
+\begin{lemma}\label{lem:children}
+Let \(x\) be a node and \(y_1,\dots,y_d\) its children in the order in which they were linked to \(x\). Then
+\(y_i.\mathit{degree}\ge i-2\) for \(i=1,\dots,d\).
+\end{lemma}
+\begin{proof}
+When \(y_i\) was linked, \(y_1,\dots,y_{i-1}\) were already children of \(x\), so \(x\) had degree at least \(i-1\).
+\textsc{Link} joins roots of equal degree, so \(y_i\) also had degree at least \(i-1\). Since then \(y_i\) has lost at
+most one child: the first loss marks it, and a second loss would have cut \(y_i\) from \(x\). So its degree is at
+least \(i-2\).
+\end{proof}
+
+\begin{lemma}\label{lem:size}
+A node of degree \(d\) roots a subtree with at least \(F_{d+2}\ge\varphi^{d}\) nodes, where \(F_j\) is the
+\(j\)-th Fibonacci number and \(\varphi=(1+\sqrt5)/2\).
+\end{lemma}
+\begin{proof}
+Let \(s_d\) be the smallest possible subtree size of a node of degree \(d\); \(s_0=1\), \(s_1=2\), and \(s_d\) is
+non-decreasing in \(d\). By \cref{lem:children}, counting \(x\), its first child and the subtrees of the others,
+\(s_d\ge 2+\sum_{i=2}^{d}s_{i-2}\). Induction with \(F_{d+2}=1+\sum_{j=0}^{d}F_j\) gives \(s_d\ge F_{d+2}\), and
+\(F_{d+2}\ge\varphi^{d}\) follows from \(\varphi^2=\varphi+1\) by induction.
+\end{proof}
+
+\begin{corollary}\label{cor:degree}
+Every node of an \(n\)-node Fibonacci heap has degree at most \(\Dn=\lfloor\log_\varphi n\rfloor\le1.4405\log_2 n\).
+\end{corollary}
+\noindent The array \(A\) in \textsc{Consolidate} is sized by this bound, and the code asserts it on every link.
+
+\subsection{The three methods side by side}
+\begin{theorem}\label{thm:sequence}
+Starting from an empty heap, any sequence of \(a\) \textsc{Insert}/\textsc{Union} operations, \(b\) \textsc{Extract-Min}
+operations, \(c\) \textsc{Decrease-Key} operations and \(d\) \textsc{Delete} operations, in which the heap never holds more
+than \(n\) nodes, has total actual cost at most \(2a+b\,(3\Dn+1)+5c+d\,(3\Dn+6)=O(a+c+(b+d)\log n)\).
+\end{theorem}
+\begin{proof}
+Sum the bounds of \cref{lem:insert,lem:extract,lem:decrease} and use \(\sum c_i\le\sum\hat c_i\).
+\end{proof}
+
+\paragraph{Accounting method.} The same analysis can be told with credits. Every root holds one credit and every
+marked node two. \textsc{Insert} is charged 2: one pays for the work, one is left on the new root. \textsc{Consolidate}
+pays for examining and linking a root with that root's credit. \textsc{Decrease-Key} is charged 5: a cascading cut is
+paid by the two credits of the marked node it cuts (one for the cut, one placed on the new root), and the charge covers
+the first cut, its root credit, and the two credits for the one new mark. The credit balance is exactly
+\(\Phi(H)\), so it never goes negative.
+
+\paragraph{Aggregate method for Dijkstra and Prim.} A Dijkstra run on \(n\) vertices and \(m\) edges performs at most
+\(n\) \textsc{Insert}, \(n\) \textsc{Extract-Min} and \(m\) \textsc{Decrease-Key} (an edge can lower a label only when its
+first endpoint is extracted). By \cref{thm:sequence} the total heap work is at most
+\(2n+n(3\Dn+1)+5m=O(m+n\log n)\), the Fredman--Tarjan bound. The heap is emptied at the end, so the next run starts
+from \(\Phi=0\) and the bounds add up over the runs of a solver. For Prim on the complete distance network \(D\)
+(G1, G3) the counts are \(k\), \(k\) and \(\le k^2\), giving \(O(k^2)\) instead of \(O(k^2\log k)\) with a binary heap.
+
+\subsection{Checking the analysis on real runs}\label{sec:amortized-check}
+The proofs above are checked in two ways.
+
+\textbf{Operation by operation.} \texttt{tests/test\_fib\_heap.cpp} runs five random sequences of \(2\times10^5\)
+operations (40\% \textsc{Insert}, 30\% \textsc{Decrease-Key}, 25\% \textsc{Extract-Min}, 5\% \textsc{Delete}), compares every result with
+\texttt{std::multiset}, verifies the heap invariants every 4096 operations, and asserts after every single operation
+that \(\Phi\ge0\) and \(c_i+\Delta\Phi\) does not exceed the bound of its lemma. All \(10^6\) checks pass.
+\Cref{fig:amort} plots the running totals: the true cost stays at about \val{amort.test.ratio} of the amortized bound.
+
+\textbf{Inside the solvers.} Each solver reports the heap counters of its run. \Cref{tab:heapcounts} sums them over
+all runs of the main benchmark and compares the measured work with the bound of \cref{thm:sequence}.
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.62\linewidth,height=5.2cm,xlabel={operations},ylabel={cumulative cost (units)},
+  legend pos=north west,legend style={font=\footnotesize,draw=none},tick label style={font=\footnotesize},
+  label style={font=\small},scaled ticks=true,grid=major,grid style={black!8}]
+\addplot[cBB,thick,dashed] table[x=op,y=sum_amortized_bound,col sep=comma]{generated/amort_seed1.csv};
+\addlegendentry{\(\sum\hat c_i\) (bound)}
+\addplot[cG3,thick] table[x=op,y=sum_actual,col sep=comma]{generated/amort_seed1.csv};
+\addlegendentry{\(\sum c_i\) (measured)}
+\addplot[cG1,thin] table[x=op,y=potential,col sep=comma]{generated/amort_seed1.csv};
+\addlegendentry{\(\Phi(D_i)\)}
+\end{axis}
+\end{tikzpicture}
+\caption{Cumulative measured cost against the cumulative amortized bound on one random sequence of
+\(2\times10^5\) operations (seed 1). The gap is the slack in the constants of \cref{lem:insert,lem:extract,lem:decrease};
+\(\Phi\) stays small because \textsc{Extract-Min} keeps the root list short.}\label{fig:amort}
+\end{figure}
+
+\input{generated/heapcounts.tex}

@@ -1,0 +1,160 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm}
+\usepackage{newtxtext,newtxmath}
+\usepackage[margin=2.3cm,headheight=14pt]{geometry}
+\usepackage{longtable,microtype,graphicx,booktabs,array,float,caption,subcaption,enumitem,xcolor,tikz,pgfplots,pgfplotstable,siunitx,fancyhdr,titlesec}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[colorlinks=true,linkcolor=accent,citecolor=accent,urlcolor=accent]{hyperref}
+\usepackage[nameinlink,capitalise]{cleveref}
+\emergencystretch=2em
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes}
+\definecolor{accent}{HTML}{1F4E79}
+\definecolor{soft}{HTML}{EAF1F8}
+\definecolor{cG1}{HTML}{D55E00}\definecolor{cG2}{HTML}{009E73}\definecolor{cG3}{HTML}{0072B2}
+\definecolor{cDP}{HTML}{CC79A7}\definecolor{cBB}{HTML}{555555}
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=1pt,topsep=3pt}
+\sisetup{group-separator={,},group-minimum-digits=4}
+\titleformat{\section}{\Large\bfseries\color{accent}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.7em}{}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small Steiner trees on Fibonacci heaps}\fancyhead[R]{\small CS23I1006 \& CS23I1002}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\theoremstyle{plain}\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\SetKwProg{Fn}{function}{}{}\SetKwComment{tcp}{\(\triangleright\) }{}
+\SetAlFnt{\small}\SetAlCapFnt{\small}\SetAlCapNameFnt{\small}
+\newcommand{\OPT}{\mathrm{OPT}}
+\newcommand{\Dn}{D(n)}
+% numbers come from results/*.csv via scripts/make_tables.py
+\makeatletter
+\newcommand{\val}[1]{\ifcsname v@#1\endcsname\csname v@#1\endcsname\else\PackageError{report}{missing value #1}{}\fi}
+\makeatother
+\input{generated/values.tex}
+
+\begin{document}
+% ------------------------------------------------------------------ cover
+\begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+\fill[accent] (current page.north west) rectangle ([yshift=-7.2cm]current page.north east);
+\node[anchor=north west,text=white,align=left,font=\sffamily] at ([xshift=2.3cm,yshift=-1.8cm]current page.north west)
+{\large Advanced Data Structures and Algorithms \(\cdot\) Course Assignment\\[18pt]
+ {\fontsize{30}{34}\selectfont\bfseries The Steiner Tree Problem}\\[10pt]
+ {\Large on Fibonacci heaps: greedy, dynamic programming, branch-and-bound}};
+\end{tikzpicture}
+\vspace*{7.2cm}
+
+\noindent\begin{tabular}{@{}p{4.2cm}p{10.5cm}@{}}
+\textbf{Team} & Sri Sooraj S \hfill CS23I1006\\
+ & Nishaant Bhaskar \hfill CS23I1002\\[6pt]
+\textbf{Institute} & IIITDM Kancheepuram\\[6pt]
+\textbf{Problem} & \#7 Steiner Tree Problem (optimisation version)\\[6pt]
+\textbf{Data structure} & Fibonacci heap (Fredman--Tarjan), with full amortized analysis\\[6pt]
+\textbf{Greedy strategies} & G1 distance-network MST (Kou--Markowsky--Berman)\\
+ & G2 shortest-path heuristic (Takahashi--Matsuyama)\\
+ & G3 best-gain triples (Zelikovsky, ratio \(11/6\))\\[6pt]
+\textbf{Exact paradigms} & Dynamic programming (Dreyfus--Wagner with a heap-based grow step)\\
+ & Branch-and-bound (reductions, dual ascent, reduced-cost elimination)\\[6pt]
+\textbf{Instances} & SteinLib B, C, P6E, I080 (\val{inst.steinlib} instances with published optima),\\
+ & \val{inst.generated} generated instances (adversarial and scaling)\\[6pt]
+\textbf{Code} & C++17, standard library only; \texttt{CS23I1006\_CS23I1002.zip}
+\end{tabular}
+
+\vfill
+\noindent\colorbox{soft}{\parbox{\dimexpr\linewidth-2\fboxsep}{\small
+\textbf{Results in one paragraph.}
+Both exact methods agree with every published SteinLib optimum they reach.
+Branch-and-bound proves optimality on \val{bb.solved} of \val{bb.total} SteinLib instances
+(all of B, P6E and I080, \val{bb.solved.C} of 20 in C) within \val{bb.tl}\,s each; the dynamic program solves
+\val{dp.solved} of the \val{dp.attempted} instances with \(k\le 20\).
+Of the greedy strategies, Zelikovsky's triple rule (G3) has the smallest mean gap to the optimum over all
+\val{gap.count} instances (\val{g3.meangap}\%, against \val{g1.meangap}\% for G1 and \val{g2.meangap}\% for G2), while G2,
+which tries every root, is best on four of the seven sets at about ten times the cost of G3.
+Over \val{amort.ops} heap operations inside the solvers, the measured work is
+\val{amort.ratio} of the amortized bound proved in \cref{sec:amortized}.
+}}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ------------------------------------------------------------------ 1
+\section{The problem}\label{sec:problem}
+
+\begin{definition}[Steiner tree problem, optimisation version]
+An \emph{instance} is a triple \(I=(G,w,T)\) where \(G=(V,E)\) is a connected undirected graph with
+\(n=|V|\) and \(m=|E|\), \(w:E\to\mathbb{Z}_{\ge0}\) is an edge weight, and \(T\subseteq V\) is the set of
+\(k=|T|\) \emph{terminals}. The instance space is
+\[\mathcal I=\{(G,w,T): G \text{ connected},\ w\ge 0,\ \emptyset\neq T\subseteq V\}.\]
+The \emph{feasible set} \(F(I)\) is the set of trees \(S=(V_S,E_S)\) with \(S\subseteq G\) and \(T\subseteq V_S\).
+The \emph{objective} is \(f:F(I)\to\mathbb{R}_{\ge0}\), \(f(S)=\sum_{e\in E_S}w(e)\), and the task is to find
+\(S^\ast\in\arg\min_{S\in F(I)}f(S)\). We write \(\OPT(I)=f(S^\ast)\). Vertices of \(V_S\setminus T\) are
+\emph{Steiner vertices}.
+\end{definition}
+
+\noindent The objective maps into \(\mathbb{R}^+\) as the assignment asks: every feasible tree has a non-negative cost, and the cost is
+positive unless all terminals coincide or are joined by zero-weight edges.
+Two special cases are polynomial: \(k=2\) is a shortest path and \(T=V\) is a minimum spanning tree. In general the
+decision version is NP-complete (Karp, 1972), and it stays NP-complete on planar graphs and on graphs with unit
+weights. It is also APX-hard: no polynomial algorithm reaches a ratio below \(96/95\) unless P\,=\,NP
+(Chleb\'ik and Chleb\'ikov\'a, 2008). So the report studies approximation (\cref{sec:greedy}) and two exact
+algorithms whose running time is exponential only in a parameter: \(k\) for the dynamic program (\cref{sec:dp}) and
+the number of branching decisions for branch-and-bound (\cref{sec:bnb}).
+
+Throughout, \(d(u,v)\) is the shortest-path distance in \(G\) and \(D=(T,\binom{T}{2},d)\) is the \emph{distance
+network}: the complete graph on the terminals weighted by \(d\). Every algorithm below works on \(D\) or on
+shortest paths in \(G\), and that is where the data structure enters.
+
+\paragraph{Where the Fibonacci heap is used.}
+Every one of the five solvers spends most of its time in Dijkstra or Prim runs, and both are sequences of
+\textsc{Insert}, \textsc{Decrease-Key} and \textsc{Extract-Min}. A Dijkstra run on a graph with \(n\) vertices and
+\(m\) edges does \(n\) inserts, \(n\) extracts and up to \(m\) decrease-keys. With a binary heap every operation costs
+\(O(\log n)\) and the run costs \(O(m\log n)\); with a Fibonacci heap \textsc{Decrease-Key} is \(O(1)\) amortized and the
+run costs \(O(m+n\log n)\). \Cref{tab:usage} lists the calls. The branch-and-bound uses the heap twice more: as
+the queue of open search nodes, keyed by lower bound, and as the queue of terminals waiting for a dual ascent step.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{4.9cm}l>{\footnotesize}l@{}}\toprule
+Solver & Heap calls per run & Total time & File (\texttt{src/})\\\midrule
+G1 KMB & \(k\) Dijkstra + Prim on \(D\) + Prim on a subgraph & \(O(k(m+n\log n))\) & \texttt{greedy1\_kmb.cpp}\\
+G2 SPH & \(k-1\) Dijkstra per root, \(k\) roots & \(O(k^2(m+n\log n))\) & \texttt{greedy2\_sph.cpp}\\
+G3 Zelikovsky & \(k\) Dijkstra + one Prim on \(D\) per round & \(O(k(m+n\log n)+k^4+k^3n)\) & \texttt{greedy3\_zelikovsky.cpp}\\
+DP & one Dijkstra per subset of \(k-1\) terminals & \(O(3^{k}n+2^{k}(m+n\log n))\) & \texttt{dp\_dreyfus\_wagner.cpp}\\
+B\&B & node queue, dual-ascent queue, two reduced-cost Dijkstra runs per node & exponential (\cref{sec:bnb}) & \texttt{bnb\_steiner.cpp}\\\bottomrule
+\end{tabular}
+\caption{Where each solver calls the Fibonacci heap (\texttt{include/fib\_heap.hpp}).}\label{tab:usage}
+\end{table}
+
+\input{sections/heap.tex}
+\input{sections/amortized.tex}
+\input{sections/greedy.tex}
+\input{sections/dp.tex}
+\input{sections/bnb.tex}
+\input{sections/experiments.tex}
+
+\begin{thebibliography}{99}\small
+\bibitem{ft87} M.~L. Fredman and R.~E. Tarjan. Fibonacci heaps and their uses in improved network optimization algorithms. \emph{J. ACM} 34(3):596--615, 1987.
+\bibitem{clrs} T.~H. Cormen, C.~E. Leiserson, R.~L. Rivest, C.~Stein. \emph{Introduction to Algorithms}, 3rd ed., ch.~17 and 19. MIT Press, 2009.
+\bibitem{tarjan85} R.~E. Tarjan. Amortized computational complexity. \emph{SIAM J. Algebraic Discrete Methods} 6(2):306--318, 1985.
+\bibitem{karp72} R.~M. Karp. Reducibility among combinatorial problems. In \emph{Complexity of Computer Computations}, 85--103, 1972.
+\bibitem{chlebik} M.~Chleb\'ik and J.~Chleb\'ikov\'a. The Steiner tree problem on graphs: inapproximability results. \emph{Theor. Comput. Sci.} 406(3):207--214, 2008.
+\bibitem{dw71} S.~E. Dreyfus and R.~A. Wagner. The Steiner problem in graphs. \emph{Networks} 1(3):195--207, 1971.
+\bibitem{emv87} R.~E. Erickson, C.~L. Monma, A.~F. Veinott. Send-and-split method for minimum-concave-cost network flows. \emph{Math. Oper. Res.} 12(4):634--664, 1987.
+\bibitem{kmb81} L.~Kou, G.~Markowsky, L.~Berman. A fast algorithm for Steiner trees. \emph{Acta Informatica} 15:141--145, 1981.
+\bibitem{tm80} H.~Takahashi and A.~Matsuyama. An approximate solution for the Steiner problem in graphs. \emph{Math. Japonica} 24(6):573--577, 1980.
+\bibitem{mehlhorn} K.~Mehlhorn. A faster approximation algorithm for the Steiner problem in graphs. \emph{Inf. Process. Lett.} 27(3):125--128, 1988.
+\bibitem{zel93} A.~Z. Zelikovsky. An 11/6-approximation algorithm for the network Steiner problem. \emph{Algorithmica} 9(5):463--470, 1993.
+\bibitem{wong84} R.~T. Wong. A dual ascent approach for Steiner tree problems on a directed graph. \emph{Math. Programming} 28:271--287, 1984.
+\bibitem{km98} T.~Koch and A.~Martin. Solving Steiner tree problems in graphs to optimality. \emph{Networks} 32(3):207--232, 1998.
+\bibitem{pd01} T.~Polzin and S.~Vahdati Daneshmand. Improved algorithms for the Steiner problem in networks. \emph{Discrete Appl. Math.} 112:263--300, 2001.
+\bibitem{steinlib} T.~Koch, A.~Martin, S.~Vo\ss. SteinLib: an updated library on Steiner tree problems in graphs. ZIB report 00-37, 2000. \url{https://steinlib.zib.de}
+\bibitem{beasley} J.~E. Beasley. An algorithm for the Steiner problem in graphs. \emph{Networks} 14:147--159, 1984.
+\bibitem{bgrs} J.~Byrka, F.~Grandoni, T.~Rothvo\ss, L.~Sanit\`a. Steiner tree approximation via iterative randomized rounding. \emph{J. ACM} 60(1):6, 2013.
+\end{thebibliography}
+
+\appendix
+\input{sections/appendix.tex}
+\end{document}

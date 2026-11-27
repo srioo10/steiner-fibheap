@@ -1,0 +1,36 @@
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+Set & instances & with \(k\le20\) & solved & equal to OPT & max time (s)\\\midrule
+B & 18 & 10 & 10 & 10 & 27.19\\
+C & 20 & 8 & 8 & 8 & 0.24\\
+P6E & 15 & 10 & 9 & 9 & 155.13\\
+I080 & 100 & 100 & 100 & 100 & 159.31\\
+Grid & 27 & 27 & 27 & 27 & 124.69\\
+Random & 6 & 6 & 6 & 6 & 1.12\\
+Adversarial & 13 & 13 & 13 & 13 & 0.01\\
+\bottomrule\end{tabular}
+\caption{DP results. Instances with \(k>20\) are not attempted (the table would need more than \(12\cdot2^{20}n\) bytes and \(3^{20}n\) merges). Every solved instance matches the known optimum.}\label{tab:dp}
+\end{table}
+\begin{figure}[H]\centering
+\begin{tikzpicture}
+\begin{semilogyaxis}[width=0.48\linewidth,height=5.4cm,xlabel={terminals \(k\)},ylabel={time (s)},
+  legend pos=north west,legend style={font=\scriptsize,draw=none},tick label style={font=\footnotesize},label style={font=\small},
+  grid=major,grid style={black!8},xtick={4,6,...,20}]
+\addplot[cDP,thick,mark=*,mark size=1.6pt] table[x=k,y=grid_s,col sep=comma]{generated/dp_vs_k.csv};\addlegendentry{grid, \(n=100\)}
+\addplot[cG3,thick,mark=square*,mark size=1.6pt] table[x=k,y=i080_s,col sep=comma]{generated/dp_vs_k.csv};\addlegendentry{I080, \(n=80\)}
+\addplot[black!50,dashed,domain=4:20,samples=17] {9.926448e-10*100*3^(x-1)};\addlegendentry{\(c\cdot3^{k-1}n\)}
+\end{semilogyaxis}
+\end{tikzpicture}\hfill
+\begin{tikzpicture}
+\begin{loglogaxis}[width=0.48\linewidth,height=5.4cm,xlabel={vertices \(n\) (\(k=10\))},ylabel={time (s)},
+  legend pos=north west,legend style={font=\scriptsize,draw=none},tick label style={font=\footnotesize},label style={font=\small},
+  grid=major,grid style={black!8}]
+\addplot[cDP,thick,mark=*,mark size=1.6pt] table[x=n,y=dp_s,col sep=comma]{generated/dp_vs_n.csv};\addlegendentry{DP}
+\addplot[cBB,thick,mark=triangle*,mark size=1.8pt] table[x=n,y=bnb_s,col sep=comma]{generated/dp_vs_n.csv};\addlegendentry{B\&B}
+\addplot[cG1,thick,mark=o,mark size=1.6pt] table[x=n,y=g1_s,col sep=comma]{generated/dp_vs_n.csv};\addlegendentry{G1}
+\addplot[cG3,thick,mark=square,mark size=1.6pt] table[x=n,y=g3_s,col sep=comma]{generated/dp_vs_n.csv};\addlegendentry{G3}
+\end{loglogaxis}
+\end{tikzpicture}
+\caption{Left: DP time against \(k\) (mean of the instances per \(k\)); the dashed line is \(3^{k-1}n\) scaled to the \(k=20\) grids,
+and the measured curve follows it. Right: time against \(n\) on sparse random graphs with \(k=10\).}\label{fig:dpscale}
+\end{figure}
