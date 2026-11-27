@@ -1,0 +1,15 @@
+build/
+*.o
+# course handout and deliverables stay local
+ADSA_Assignment*.pdf
+CS23I1006_CS23I1002.*
+# LaTeX build files
+report/*.aux
+report/*.log
+report/*.out
+report/*.fls
+report/*.fdb_latexmk
+report/*.toc
+report/*.synctex.gz
+report/*.pdf
+results/trees/
